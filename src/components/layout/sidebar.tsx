@@ -14,6 +14,7 @@ const navItems: Record<Role, { href: string; label: string; icon: React.ElementT
     { href: "/admin/cars", label: "Gestión de Coches", icon: Car },
     { href: "/admin/users", label: "Usuarios", icon: Users },
     { href: "/admin/apis", label: "APIs Externas", icon: Globe },
+    { href: "/admin/inquiries", label: "Consultas", icon: Bell },
     { href: "/admin/reports", label: "Reportes", icon: BarChart3 },
     { href: "/admin/audit", label: "Auditoría", icon: Shield },
   ],

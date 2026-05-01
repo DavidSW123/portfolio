@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Car, ArrowLeft, Fuel, Settings, Calendar, Gauge, Palette, DoorOpen } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { CarGallery } from "./gallery-client";
+import { InquiryForm } from "./inquiry-form";
 
 export default async function CarDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -128,15 +129,7 @@ export default async function CarDetailPage({ params }: { params: Promise<{ id: 
                 ))}
               </div>
 
-              <Link href="/login" className="block">
-                <button className="w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
-                  Consultar disponibilidad
-                </button>
-              </Link>
-
-              <p className="mt-3 text-center text-xs text-gray-400">
-                Inicia sesión para contactar con nosotros
-              </p>
+              <InquiryForm carId={car.id} />
             </div>
           </div>
         </div>
