@@ -5,26 +5,30 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { showToast } from "@/components/ui/toast";
-import { Car, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, Zap } from "lucide-react";
+import { useLanguage } from "@/components/language-provider";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useLanguage();
+  const a = t.auth.register;
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "" });
   const [errors, setErrors] = useState<Partial<typeof form>>({});
 
   const passwordChecks = [
-    { label: "Al menos 8 caracteres", ok: form.password.length >= 8 },
-    { label: "Una letra mayúscula", ok: /[A-Z]/.test(form.password) },
-    { label: "Un número", ok: /[0-9]/.test(form.password) },
+    { label: a.check1, ok: form.password.length >= 8 },
+    { label: a.check2, ok: /[A-Z]/.test(form.password) },
+    { label: a.check3, ok: /[0-9]/.test(form.password) },
   ];
 
   function validate() {
     const errs: Partial<typeof form> = {};
-    if (!form.name.trim() || form.name.trim().length < 2) errs.name = "Nombre mínimo 2 caracteres";
-    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Email inválido";
-    if (!passwordChecks.every((c) => c.ok)) errs.password = "La contraseña no cumple los requisitos";
+    if (!form.name.trim() || form.name.trim().length < 2) errs.name = a.name;
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = a.email;
+    if (!passwordChecks.every((c) => c.ok)) errs.password = a.pass;
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -32,7 +36,6 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-
     setLoading(true);
     try {
       const res = await fetch("/api/auth/register", {
@@ -42,73 +45,68 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      showToast("Cuenta creada correctamente. Inicia sesión.", "success");
+      showToast("✓", "success");
       router.push("/login");
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : "Error al registrarse", "error");
+      showToast(err instanceof Error ? err.message : "Error", "error");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md">
+    <div
+      className="flex min-h-screen items-center justify-center p-4 relative"
+      style={{ background: "var(--bg)" }}
+    >
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-64 opacity-20 blur-3xl pointer-events-none"
+        style={{ background: "var(--accent)" }}
+      />
+
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+
+      <div className="w-full max-w-md relative">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600">
-              <Car className="h-5 w-5 text-white" />
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-xl"
+              style={{ background: "var(--accent)", boxShadow: "var(--shadow-accent)" }}
+            >
+              <Zap className="h-5 w-5" style={{ color: "var(--accent-fg)" }} />
             </div>
-            <span className="text-xl font-bold text-gray-900">AutoImport <span className="text-blue-600">Pro</span></span>
+            <span className="text-xl font-bold" style={{ color: "var(--text)" }}>
+              AutoImport <span style={{ color: "var(--accent)" }}>Pro</span>
+            </span>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Crear Cuenta</h1>
-          <p className="text-sm text-gray-500 mt-1">Regístrate como cliente</p>
+          <h1 className="text-2xl font-extrabold" style={{ color: "var(--text)" }}>{a.title}</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>{a.sub}</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+        <div
+          className="rounded-2xl p-8"
+          style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow)" }}
+        >
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Nombre completo"
-              id="name"
-              value={form.name}
+            <Input label={a.name} id="name" value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              error={errors.name}
-              placeholder="Juan García"
-            />
-            <Input
-              label="Email"
-              id="email"
-              type="email"
-              value={form.email}
+              error={errors.name} placeholder={a.name_ph} />
+            <Input label={a.email} id="email" type="email" value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              error={errors.email}
-              placeholder="tu@email.com"
-            />
-            <Input
-              label="Teléfono (opcional)"
-              id="phone"
-              type="tel"
-              value={form.phone}
+              error={errors.email} placeholder="you@example.com" />
+            <Input label={a.phone_opt} id="phone" type="tel" value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="+34 600 000 000"
-            />
+              placeholder="+34 600 000 000" />
             <div>
               <div className="relative">
-                <Input
-                  label="Contraseña"
-                  id="password"
-                  type={showPass ? "text" : "password"}
+                <Input label={a.pass} id="password" type={showPass ? "text" : "password"}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  error={errors.password}
-                  placeholder="••••••••"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-8 text-gray-400 hover:text-gray-600"
-                >
+                  error={errors.password} placeholder="••••••••" className="pr-10" />
+                <button type="button" onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3 top-8" style={{ color: "var(--text-subtle)" }}>
                   {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
@@ -116,8 +114,8 @@ export default function RegisterPage() {
                 <div className="mt-2 space-y-1">
                   {passwordChecks.map((c) => (
                     <div key={c.label} className="flex items-center gap-1.5 text-xs">
-                      <CheckCircle className={`h-3 w-3 ${c.ok ? "text-green-500" : "text-gray-300"}`} />
-                      <span className={c.ok ? "text-green-700" : "text-gray-400"}>{c.label}</span>
+                      <CheckCircle className="h-3 w-3" style={{ color: c.ok ? "var(--success)" : "var(--text-subtle)" }} />
+                      <span style={{ color: c.ok ? "var(--success)" : "var(--text-subtle)" }}>{c.label}</span>
                     </div>
                   ))}
                 </div>
@@ -125,14 +123,14 @@ export default function RegisterPage() {
             </div>
 
             <Button type="submit" className="w-full" loading={loading} size="lg">
-              Crear Cuenta
+              {a.btn}
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
-            ¿Ya tienes cuenta?{" "}
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700">
-              Inicia sesión
+          <p className="mt-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
+            {a.have_acc}{" "}
+            <Link href="/login" className="font-semibold" style={{ color: "var(--accent)" }}>
+              {a.link}
             </Link>
           </p>
         </div>
