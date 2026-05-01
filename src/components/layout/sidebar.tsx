@@ -1,10 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Car, Users, Settings, LogOut, ChevronRight,
-  Package, UserCheck, Globe, BarChart3, FileText, Bell, Shield
+  Package, Globe, BarChart3, FileText, Bell, Shield, Zap
 } from "lucide-react";
 import type { Role } from "@/types";
 
@@ -35,6 +34,13 @@ const navItems: Record<Role, { href: string; label: string; icon: React.ElementT
   ],
 };
 
+const roleLabels: Record<Role, { label: string }> = {
+  ADMIN: { label: "Administrador" },
+  PROVIDER: { label: "Proveedor" },
+  COLLABORATOR: { label: "Colaborador" },
+  CLIENT: { label: "Cliente" },
+};
+
 interface SidebarProps {
   role: Role;
   userName: string;
@@ -45,37 +51,51 @@ export function Sidebar({ role, userName, userEmail }: SidebarProps) {
   const pathname = usePathname();
   const items = navItems[role] || [];
 
-  const roleLabels: Record<Role, { label: string; color: string }> = {
-    ADMIN: { label: "Administrador", color: "bg-purple-100 text-purple-700" },
-    PROVIDER: { label: "Proveedor", color: "bg-blue-100 text-blue-700" },
-    COLLABORATOR: { label: "Colaborador", color: "bg-green-100 text-green-700" },
-    CLIENT: { label: "Cliente", color: "bg-gray-100 text-gray-700" },
-  };
-
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
+    <aside
+      className="flex h-screen w-64 flex-col flex-shrink-0"
+      style={{
+        background: "var(--bg-surface)",
+        borderRight: "1px solid var(--border)",
+      }}
+    >
       {/* Logo */}
-      <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600">
-          <Car className="h-5 w-5 text-white" />
+      <div
+        className="flex items-center gap-3 px-6 py-5"
+        style={{ borderBottom: "1px solid var(--border-subtle)" }}
+      >
+        <div
+          className="flex h-9 w-9 items-center justify-center rounded-xl flex-shrink-0"
+          style={{ background: "var(--accent)", boxShadow: "var(--shadow-accent)" }}
+        >
+          <Zap className="h-5 w-5" style={{ color: "var(--accent-fg)" }} />
         </div>
         <div>
-          <p className="text-sm font-bold text-gray-900">AutoImport</p>
-          <p className="text-xs text-gray-500">Pro</p>
+          <p className="text-sm font-bold tracking-tight" style={{ color: "var(--text)" }}>AutoImport</p>
+          <p className="text-xs font-medium" style={{ color: "var(--accent)" }}>PRO</p>
         </div>
       </div>
 
       {/* User info */}
-      <div className="border-b border-gray-100 px-4 py-4">
-        <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-semibold text-sm flex-shrink-0">
+      <div className="px-4 py-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+        <div
+          className="flex items-center gap-3 rounded-xl p-3"
+          style={{ background: "var(--bg-surface-2)" }}
+        >
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-full flex-shrink-0 text-sm font-bold"
+            style={{ background: "var(--accent-subtle)", color: "var(--accent)", border: "1px solid var(--accent)" }}
+          >
             {userName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-gray-900">{userName}</p>
-            <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium mt-0.5", roleLabels[role].color)}>
+            <p className="truncate text-sm font-semibold" style={{ color: "var(--text)" }}>{userName}</p>
+            <p
+              className="text-xs font-medium px-1.5 py-0.5 rounded-full inline-block mt-0.5"
+              style={{ background: "var(--accent-subtle)", color: "var(--accent)" }}
+            >
               {roleLabels[role].label}
-            </span>
+            </p>
           </div>
         </div>
       </div>
@@ -90,12 +110,15 @@ export function Sidebar({ role, userName, userEmail }: SidebarProps) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  )}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all"
+                  style={isActive ? {
+                    background: "var(--accent-subtle)",
+                    color: "var(--accent)",
+                    borderLeft: "2px solid var(--accent)",
+                    paddingLeft: "calc(0.75rem - 2px)",
+                  } : {
+                    color: "var(--text-muted)",
+                  }}
                 >
                   <Icon className="h-4 w-4 flex-shrink-0" />
                   <span className="flex-1">{item.label}</span>
@@ -107,11 +130,12 @@ export function Sidebar({ role, userName, userEmail }: SidebarProps) {
         </ul>
       </nav>
 
-      {/* Footer actions */}
-      <div className="border-t border-gray-200 px-3 py-4 space-y-1">
+      {/* Footer */}
+      <div className="px-3 py-4 space-y-1" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <Link
           href="/profile"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all"
+          style={{ color: "var(--text-muted)" }}
         >
           <Settings className="h-4 w-4" />
           Perfil y Ajustes
@@ -119,7 +143,8 @@ export function Sidebar({ role, userName, userEmail }: SidebarProps) {
         <form action="/api/auth/logout" method="POST">
           <button
             type="submit"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all"
+            style={{ color: "var(--destructive)" }}
           >
             <LogOut className="h-4 w-4" />
             Cerrar Sesión
