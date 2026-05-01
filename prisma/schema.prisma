@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          String    @default("CLIENT")
+  isActive      Boolean   @default(true)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  client        Client?
+  cars          Car[]     @relation("CarSubmitter")
+  approvedCars  Car[]     @relation("CarApprover")
+  sessions      Session[]
+  auditLogs     AuditLog[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Client {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  phone        String?
+  address      String?
+  city         String?
+  country      String?
+  dni          String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inquiries    CarInquiry[]
+}
+
+model Car {
+  id            String    @id @default(cuid())
+  title         String
+  brand         String
+  model         String
+  year          Int
+  mileage       Int?
+  color         String?
+  fuelType      String?
+  transmission  String?
+  engine        String?
+  doors         Int?
+  description   String?
+  basePrice     Float
+  markup        Float     @default(30)
+  finalPrice    Float
+  status        String    @default("PENDING")
+  source        String    @default("MANUAL")
+  isPublished   Boolean   @default(false)
+  externalId    String?
+  apiConfigId   String?
+
+  submittedById String
+  approvedById  String?
+  approvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  submittedBy   User      @relation("CarSubmitter", fields: [submittedById], references: [id])
+  approvedBy    User?     @relation("CarApprover", fields: [approvedById], references: [id])
+  apiConfig     ApiConfig? @relation(fields: [apiConfigId], references: [id])
+  photos        CarPhoto[]
+  comments      CarComment[]
+  inquiries     CarInquiry[]
+}
+
+model CarPhoto {
+  id        String   @id @default(cuid())
+  carId     String
+  url       String
+  filename  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+}
+
+model CarComment {
+  id         String   @id @default(cuid())
+  carId      String
+  authorId   String?
+  authorName String?
+  content    String
+  isInternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  car        Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+}
+
+model CarInquiry {
+  id        String   @id @default(cuid())
+  carId     String
+  clientId  String
+  message   String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model ApiConfig {
+  id          String   @id @default(cuid())
+  name        String
+  url         String
+  apiKey      String?
+  headers     String?
+  isActive    Boolean  @default(true)
+  lastSync    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cars        Car[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
