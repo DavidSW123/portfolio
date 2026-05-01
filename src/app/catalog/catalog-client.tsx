@@ -230,7 +230,7 @@ export function CatalogClient({ cars, total, page, totalPages, params }: Props) 
                           </div>
                           <div className="flex items-center justify-between mt-3">
                             <p className="text-lg font-extrabold" style={{ color: "var(--accent)" }}>
-                              {formatPrice(car.finalPrice)}
+                              {car.finalPrice != null ? formatPrice(car.finalPrice) : "—"}
                             </p>
                             <span
                               className="flex items-center gap-1 text-xs font-medium"
