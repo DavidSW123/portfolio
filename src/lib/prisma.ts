@@ -1,24 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
-import path from "path";
-
-function resolveDbUrl(url: string): string {
-  // Convert relative file: URLs to absolute for libsql
-  if (url.startsWith("file:./") || url.startsWith("file:../")) {
-    const relativePath = url.replace("file:", "");
-    return "file:" + path.resolve(process.cwd(), relativePath);
-  }
-  if (url.startsWith("file:") && !url.startsWith("file:/")) {
-    const relativePath = url.replace("file:", "");
-    return "file:" + path.resolve(process.cwd(), relativePath);
-  }
-  return url;
-}
+import { PrismaPg } from "@prisma/adapter-pg";
 
 function createPrismaClient() {
-  const rawUrl = process.env.DATABASE_URL || "file:./dev.db";
-  const url = resolveDbUrl(rawUrl);
-  const adapter = new PrismaLibSql({ url });
+  const connectionString = process.env.DATABASE_URL!;
+  const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }
 
