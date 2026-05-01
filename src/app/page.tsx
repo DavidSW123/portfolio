@@ -1,252 +1,396 @@
 "use client";
 import Link from "next/link";
-import { Car, Shield, Globe, Users, ArrowRight, Zap, ChevronRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
-const featureIcons = [Shield, Globe, Users, Car];
+const BRANDS = ["BMW", "Mercedes-Benz", "Porsche", "Audi", "Ferrari", "Lamborghini", "Maserati", "Bentley", "Rolls-Royce", "Aston Martin", "McLaren", "Range Rover"];
+
+const STEPS = [
+  { n: "01", es: "Consulta gratuita", en: "Free consultation" },
+  { n: "02", es: "Selección del vehículo", en: "Vehicle selection" },
+  { n: "03", es: "Importación y entrega", en: "Import & delivery" },
+];
 
 export default function HomePage() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)", color: "var(--text)" }}>
+    <div style={{ background: "#000", color: "#fff", fontFamily: "var(--font-sans)" }}>
 
-      {/* ── Navbar ── */}
+      {/* ── NAVBAR ── */}
       <nav
-        className="fixed top-0 inset-x-0 z-50 backdrop-blur-md"
-        style={{ borderBottom: "1px solid var(--border-subtle)", background: "rgba(8,13,26,0.85)" }}
+        className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-8 sm:px-12"
+        style={{ height: 72, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5">
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-lg"
-                style={{ background: "var(--accent)", boxShadow: "var(--shadow-accent)" }}
-              >
-                <Zap className="h-4 w-4" style={{ color: "var(--accent-fg)" }} />
-              </div>
-              <span className="text-base font-bold tracking-tight" style={{ color: "var(--text)" }}>
-                AutoImport <span style={{ color: "var(--accent)" }}>Pro</span>
-              </span>
-            </Link>
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-3">
+          <span
+            className="text-xs font-bold tracking-[0.25em] uppercase"
+            style={{ color: "var(--accent)" }}
+          >
+            AutoImport
+          </span>
+          <span
+            className="hidden sm:block w-px h-4"
+            style={{ background: "rgba(255,255,255,0.2)" }}
+          />
+          <span className="hidden sm:block text-xs font-light tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.5)" }}>
+            Pro
+          </span>
+        </Link>
 
-            {/* Right */}
-            <div className="flex items-center gap-2">
-              <Link
-                href="/catalog"
-                className="hidden sm:block text-sm font-medium px-3 py-1.5 rounded-lg transition-all"
-                style={{ color: "var(--text-muted)" }}
-              >
-                {t.nav.catalog}
-              </Link>
-              <LanguageSwitcher />
-              <Link
-                href="/login"
-                className="text-sm font-medium px-3 py-1.5 rounded-lg transition-all"
-                style={{ color: "var(--text-muted)" }}
-              >
-                {t.nav.login}
-              </Link>
-              <Link
-                href="/register"
-                className="text-sm font-semibold px-4 py-2 rounded-lg transition-all"
-                style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
-              >
-                {t.nav.register}
-              </Link>
-            </div>
-          </div>
+        {/* Center links */}
+        <div className="hidden md:flex items-center gap-8">
+          {[
+            { href: "/catalog", label: t.nav.catalog },
+            { href: "/login",   label: t.nav.login },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="text-xs font-medium tracking-[0.15em] uppercase transition-colors"
+              style={{ color: "rgba(255,255,255,0.55)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Right */}
+        <div className="flex items-center gap-4">
+          <LanguageSwitcher />
+          <Link
+            href="/register"
+            className="hidden sm:inline-flex items-center gap-2 text-xs font-semibold tracking-[0.12em] uppercase px-5 py-2.5 rounded-sm transition-all"
+            style={{ background: "var(--accent)", color: "#fff" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-hover)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--accent)")}
+          >
+            {t.nav.register}
+          </Link>
         </div>
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden pt-16">
-        {/* Background layers */}
+      {/* ── HERO ── */}
+      <section
+        className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden"
+        style={{ paddingTop: 72 }}
+      >
+        {/* Gradient layers */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(27,43,94,0.15) 0%, transparent 50%, rgba(0,0,0,1) 100%)" }} />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 100% 70% at 50% 30%, rgba(27,43,94,0.3) 0%, transparent 70%)" }} />
+
+        {/* Subtle grid */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
-            background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(27,43,94,0.6) 0%, transparent 70%)",
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+            backgroundSize: "80px 80px",
           }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: "repeating-linear-gradient(0deg, var(--border) 0px, transparent 1px, transparent 60px), repeating-linear-gradient(90deg, var(--border) 0px, transparent 1px, transparent 60px)",
-          }}
-        />
-        {/* Accent glow */}
-        <div
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-48 opacity-20 blur-3xl"
-          style={{ background: "var(--accent)" }}
         />
 
-        <div className="relative mx-auto max-w-5xl px-5 sm:px-8 text-center">
-          {/* Badge */}
-          <div
-            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide uppercase mb-8"
-            style={{ background: "var(--accent-subtle)", color: "var(--accent)", border: "1px solid var(--accent)" }}
+        {/* Orange glow bottom */}
+        <div
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{ width: 700, height: 200, background: "radial-gradient(ellipse, rgba(232,97,26,0.18) 0%, transparent 70%)", filter: "blur(40px)" }}
+        />
+
+        {/* Content */}
+        <div className="relative text-center px-6 sm:px-12 max-w-5xl mx-auto">
+          {/* Overline */}
+          <p
+            className="mb-8 text-xs font-semibold tracking-[0.4em] uppercase"
+            style={{ color: "var(--accent)" }}
           >
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--accent)" }} />
-            {t.hero.badge}
-          </div>
+            {locale === "es" ? "Importación de lujo desde Europa" :
+             locale === "en" ? "Luxury import from Europe" :
+             locale === "ru" ? "Люксовый импорт из Европы" :
+             locale === "de" ? "Luxusimport aus Europa" :
+             locale === "it" ? "Importazione di lusso dall'Europa" :
+             locale === "fr" ? "Importation de luxe depuis l'Europe" :
+             "欧洲豪华进口"}
+          </p>
 
-          {/* Headline */}
+          {/* Main headline — serif */}
           <h1
-            className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-none mb-4"
-            style={{ color: "var(--text)" }}
+            className="leading-none tracking-tight"
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "clamp(3rem, 9vw, 7.5rem)",
+              fontWeight: 700,
+              lineHeight: 1.0,
+              letterSpacing: "-0.02em",
+              color: "#fff",
+            }}
           >
             {t.hero.title}
             <br />
-            <span
-              className="mt-2 inline-block"
-              style={{
-                color: "var(--accent)",
-                textShadow: "0 0 60px rgba(232,97,26,0.4)",
-              }}
-            >
+            <em style={{ color: "var(--accent)", fontStyle: "italic" }}>
               {t.hero.accent}
-            </span>
+            </em>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed" style={{ color: "var(--text-muted)" }}>
+          {/* Divider line */}
+          <div className="mx-auto mt-10 mb-8" style={{ width: 60, height: 1, background: "var(--accent)" }} />
+
+          {/* Subtitle */}
+          <p
+            className="mx-auto max-w-xl text-sm sm:text-base font-light leading-relaxed"
+            style={{ color: "rgba(255,255,255,0.55)", letterSpacing: "0.02em" }}
+          >
             {t.hero.subtitle}
           </p>
 
           {/* CTAs */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/catalog"
-              className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-semibold transition-all hover:scale-105 active:scale-95"
-              style={{
-                background: "var(--accent)",
-                color: "var(--accent-fg)",
-                boxShadow: "var(--shadow-accent)",
-              }}
+              className="inline-flex items-center gap-2.5 px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase transition-all hover:scale-105"
+              style={{ background: "var(--accent)", color: "#fff" }}
             >
               {t.hero.cta1}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-base font-semibold transition-all hover:scale-105 active:scale-95"
-              style={{
-                background: "transparent",
-                color: "var(--text)",
-                border: "1px solid var(--border)",
-              }}
+              className="inline-flex items-center gap-2.5 px-8 py-4 text-xs font-medium tracking-[0.2em] uppercase transition-all hover:scale-105"
+              style={{ background: "transparent", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.2)" }}
             >
               {t.hero.cta2}
-              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Stats strip */}
+        <div
+          className="absolute bottom-0 inset-x-0 grid grid-cols-2 sm:grid-cols-4"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+        >
+          {t.stats.map((s, i) => (
+            <div
+              key={s.label}
+              className="flex flex-col items-center justify-center py-6"
+              style={{
+                borderRight: i < 3 ? "1px solid rgba(255,255,255,0.07)" : undefined,
+                background: "rgba(0,0,0,0.6)",
+              }}
+            >
+              <span
+                className="text-2xl sm:text-3xl font-extrabold"
+                style={{ fontFamily: "var(--font-serif)", color: "var(--accent)" }}
+              >
+                {s.value}
+              </span>
+              <span className="mt-1 text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.4)" }}>
+                {s.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── BRANDS MARQUEE ── */}
+      <section style={{ background: "#050505", borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", padding: "20px 0" }}>
+        <div
+          className="flex gap-16 items-center"
+          style={{
+            animation: "marquee 30s linear infinite",
+            width: "max-content",
+          }}
+        >
+          {[...BRANDS, ...BRANDS].map((brand, i) => (
+            <span
+              key={i}
+              className="text-xs font-semibold tracking-[0.3em] uppercase whitespace-nowrap"
+              style={{ color: "rgba(255,255,255,0.2)" }}
+            >
+              {brand}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* ── PROCESS ── */}
+      <section style={{ background: "#000", padding: "120px 0" }}>
+        <div className="mx-auto max-w-6xl px-8 sm:px-12">
+          {/* Section header */}
+          <div className="mb-20 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+            <div>
+              <p className="mb-4 text-xs font-semibold tracking-[0.35em] uppercase" style={{ color: "var(--accent)" }}>
+                {locale === "es" ? "Cómo funciona" : locale === "en" ? "How it works" : locale === "ru" ? "Как это работает" : locale === "de" ? "So funktioniert es" : locale === "it" ? "Come funziona" : locale === "fr" ? "Comment ça marche" : "如何运作"}
+              </p>
+              <h2
+                style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem,5vw,3.5rem)", fontWeight: 700, lineHeight: 1.1, color: "#fff" }}
+              >
+                {locale === "es" ? "Simple. Rápido. Seguro." :
+                 locale === "en" ? "Simple. Fast. Secure." :
+                 locale === "ru" ? "Просто. Быстро. Надёжно." :
+                 locale === "de" ? "Einfach. Schnell. Sicher." :
+                 locale === "it" ? "Semplice. Veloce. Sicuro." :
+                 locale === "fr" ? "Simple. Rapide. Sûr." :
+                 "简单。快速。安全。"}
+              </h2>
+            </div>
+            <Link
+              href="/catalog"
+              className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase pb-1 flex-shrink-0"
+              style={{ color: "var(--accent)", borderBottom: "1px solid var(--accent)" }}
+            >
+              {t.nav.catalog} <ArrowUpRight className="h-3 w-3" />
             </Link>
           </div>
 
-          {/* Stats */}
-          <div
-            className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden"
-            style={{ border: "1px solid var(--border)", background: "var(--border)" }}
-          >
-            {t.stats.map((s) => (
+          {/* Steps */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ background: "rgba(255,255,255,0.07)" }}>
+            {STEPS.map((step, i) => (
               <div
-                key={s.label}
-                className="flex flex-col items-center justify-center py-6 px-4"
-                style={{ background: "var(--bg-surface)" }}
+                key={step.n}
+                className="relative p-10 sm:p-12"
+                style={{ background: "#000" }}
               >
-                <span className="text-3xl font-extrabold" style={{ color: "var(--accent)" }}>{s.value}</span>
-                <span className="mt-1 text-xs font-medium" style={{ color: "var(--text-muted)" }}>{s.label}</span>
+                {/* Number */}
+                <span
+                  className="block text-xs font-bold tracking-[0.3em] mb-6"
+                  style={{ color: "var(--accent)" }}
+                >
+                  {step.n}
+                </span>
+                {/* Title */}
+                <h3
+                  style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", fontWeight: 600, color: "#fff", lineHeight: 1.2 }}
+                >
+                  {locale === "en" ? step.en : step.es}
+                </h3>
+                {/* Divider */}
+                <div className="mt-6" style={{ width: 32, height: 1, background: "rgba(255,255,255,0.15)" }} />
+                {i < 2 && (
+                  <div className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10">
+                    <ArrowRight className="h-4 w-4" style={{ color: "rgba(255,255,255,0.15)" }} />
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section className="py-28" style={{ background: "var(--bg-surface)" }}>
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight" style={{ color: "var(--text)" }}>
+      {/* ── WHY US ── */}
+      <section style={{ background: "#080808", padding: "120px 0", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="mx-auto max-w-6xl px-8 sm:px-12">
+          <div className="mb-16 max-w-xl">
+            <p className="mb-4 text-xs font-semibold tracking-[0.35em] uppercase" style={{ color: "var(--accent)" }}>
+              {t.features.sub}
+            </p>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem,5vw,3.5rem)", fontWeight: 700, color: "#fff", lineHeight: 1.1 }}>
               {t.features.title}
             </h2>
-            <p className="mt-3 text-base" style={{ color: "var(--text-muted)" }}>{t.features.sub}</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {t.features.items.map((f, i) => {
-              const Icon = featureIcons[i];
-              return (
-                <div
-                  key={f.title}
-                  className="group relative rounded-2xl p-6 transition-all hover:-translate-y-1"
-                  style={{
-                    background: "var(--bg-surface-2)",
-                    border: "1px solid var(--border)",
-                  }}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-px" style={{ background: "rgba(255,255,255,0.06)" }}>
+            {t.features.items.map((f, i) => (
+              <div
+                key={f.title}
+                className="group p-10 sm:p-12 transition-colors"
+                style={{ background: "#080808" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#0f0f0f")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#080808")}
+              >
+                <span
+                  className="block text-xs font-bold tracking-[0.3em] mb-6"
+                  style={{ color: "rgba(255,255,255,0.2)" }}
                 >
-                  <div
-                    className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl"
-                    style={{ background: "var(--accent-subtle)", border: "1px solid var(--accent)" }}
-                  >
-                    <Icon className="h-6 w-6" style={{ color: "var(--accent)" }} />
-                  </div>
-                  <h3 className="mb-2 text-base font-semibold" style={{ color: "var(--text)" }}>{f.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>{f.desc}</p>
-                  {/* Corner accent */}
-                  <div
-                    className="absolute top-0 right-0 h-px w-16 transition-all group-hover:w-full"
-                    style={{ background: "var(--accent)" }}
-                  />
-                </div>
-              );
-            })}
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h3
+                  className="mb-4"
+                  style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 600, color: "#fff" }}
+                >
+                  {f.title}
+                </h3>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.01em" }}
+                >
+                  {f.desc}
+                </p>
+                <div
+                  className="mt-8 transition-all group-hover:w-12"
+                  style={{ width: 24, height: 1, background: "var(--accent)" }}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="py-24 relative overflow-hidden">
+      {/* ── CTA BANNER ── */}
+      <section
+        className="relative overflow-hidden"
+        style={{ padding: "100px 0", background: "#000", borderTop: "1px solid rgba(255,255,255,0.05)" }}
+      >
         <div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(135deg, var(--accent) 0%, #b84d10 100%)" }}
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 80% 100% at 50% 100%, rgba(232,97,26,0.12) 0%, transparent 70%)" }}
         />
-        <div className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
-            backgroundSize: "32px 32px",
-          }}
-        />
-        <div className="relative mx-auto max-w-3xl px-5 sm:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">{t.cta.title}</h2>
-          <p className="mt-4 text-lg text-white/80">{t.cta.sub}</p>
+        <div className="relative mx-auto max-w-3xl px-8 sm:px-12 text-center">
+          <p className="mb-6 text-xs font-semibold tracking-[0.35em] uppercase" style={{ color: "var(--accent)" }}>
+            {locale === "es" ? "Empieza ahora" : locale === "en" ? "Get started" : locale === "ru" ? "Начать сейчас" : locale === "de" ? "Jetzt starten" : locale === "it" ? "Inizia ora" : locale === "fr" ? "Commencer" : "立即开始"}
+          </p>
+          <h2
+            className="mb-8"
+            style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.2rem,6vw,4rem)", fontWeight: 700, color: "#fff", lineHeight: 1.05 }}
+          >
+            {t.cta.title}
+          </h2>
+          <p className="mb-10 text-sm font-light" style={{ color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
+            {t.cta.sub}
+          </p>
           <Link
             href="/register"
-            className="mt-10 inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold transition-all hover:scale-105 active:scale-95"
-            style={{ background: "#fff", color: "var(--accent)" }}
+            className="inline-flex items-center gap-3 px-10 py-4 text-xs font-bold tracking-[0.2em] uppercase transition-all hover:scale-105"
+            style={{ background: "var(--accent)", color: "#fff" }}
           >
             {t.cta.btn}
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </section>
 
-      {/* ── Footer ── */}
+      {/* ── FOOTER ── */}
       <footer
-        className="py-8"
-        style={{ borderTop: "1px solid var(--border-subtle)", background: "var(--bg)" }}
+        style={{ background: "#000", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "40px 0" }}
       >
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div
-              className="flex h-6 w-6 items-center justify-center rounded"
-              style={{ background: "var(--accent)" }}
-            >
-              <Zap className="h-3 w-3 text-white" />
-            </div>
-            <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>AutoImport Pro</span>
+        <div className="mx-auto max-w-6xl px-8 sm:px-12 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <span className="text-xs font-bold tracking-[0.25em] uppercase" style={{ color: "var(--accent)" }}>
+            AutoImport Pro
+          </span>
+          <div className="flex items-center gap-8">
+            <Link href="/catalog" className="text-xs tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>
+              {t.nav.catalog}
+            </Link>
+            <Link href="/login" className="text-xs tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>
+              {t.nav.login}
+            </Link>
+            <Link href="/register" className="text-xs tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>
+              {t.nav.register}
+            </Link>
           </div>
-          <p className="text-xs" style={{ color: "var(--text-subtle)" }}>{t.footer.rights}</p>
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)", letterSpacing: "0.05em" }}>
+            {t.footer.rights}
+          </p>
         </div>
       </footer>
+
+      {/* Marquee animation */}
+      <style>{`
+        @keyframes marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   );
 }
