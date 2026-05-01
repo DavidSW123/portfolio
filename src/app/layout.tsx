@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className="h-full theme-gold">
+    <html lang="es" className="h-full theme-noche">
       <body className={`${inter.className} h-full antialiased`}>
         <ThemeProvider>
           {children}

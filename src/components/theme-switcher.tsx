@@ -3,33 +3,30 @@ import { useState } from "react";
 import { useTheme, type Theme } from "./theme-provider";
 import { Palette, Check } from "lucide-react";
 
-const THEMES: { id: Theme; name: string; desc: string; bg: string; accent: string; text: string; border: string }[] = [
+const THEMES: { id: Theme; name: string; desc: string; bg: string; accent: string; border: string }[] = [
   {
-    id: "theme-gold",
-    name: "Lujo Oscuro",
-    desc: "Negro + Oro",
-    bg: "#09090b",
-    accent: "#d4af37",
-    text: "#fafafa",
-    border: "#2a2a32",
+    id: "theme-noche",
+    name: "Noche",
+    desc: "Navy oscuro + Naranja",
+    bg: "#080d1a",
+    accent: "#e8611a",
+    border: "#1e2d50",
   },
   {
-    id: "theme-blue",
-    name: "Tech Eléctrico",
-    desc: "Negro + Azul Cian",
-    bg: "#03030f",
-    accent: "#00d4ff",
-    text: "#e8e8ff",
-    border: "#1a1a40",
+    id: "theme-plata",
+    name: "Plata",
+    desc: "Carbono + Plata",
+    bg: "#111111",
+    accent: "#c0c0c0",
+    border: "#333333",
   },
   {
-    id: "theme-red",
-    name: "Sport Agresivo",
-    desc: "Crema + Rojo",
-    bg: "#f5f0e8",
-    accent: "#cc0000",
-    text: "#0f0f0f",
-    border: "#d8d0c0",
+    id: "theme-dia",
+    name: "Día",
+    desc: "Blanco + Navy + Naranja",
+    bg: "#f4f6fb",
+    accent: "#e8611a",
+    border: "#d0d8ea",
   },
 ];
 
@@ -62,10 +59,9 @@ export function ThemeSwitcher() {
                   border: `1px solid ${theme === t.id ? "var(--accent)" : "var(--border)"}`,
                 }}
               >
-                {/* Mini preview */}
                 <div
                   className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center"
-                  style={{ background: t.bg, border: `1px solid ${t.border}` }}
+                  style={{ background: t.bg, border: `2px solid ${t.border}` }}
                 >
                   <div
                     className="w-4 h-4 rounded-full"

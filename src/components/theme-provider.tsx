@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 
-export type Theme = "theme-gold" | "theme-blue" | "theme-red";
+export type Theme = "theme-noche" | "theme-plata" | "theme-dia";
 
 interface ThemeContextValue {
   theme: Theme;
@@ -9,7 +9,7 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: "theme-gold",
+  theme: "theme-noche",
   setTheme: () => {},
 });
 
@@ -18,12 +18,14 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("theme-gold");
+  const [theme, setThemeState] = useState<Theme>("theme-noche");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("autoimport-theme") as Theme | null;
-    if (saved) setThemeState(saved);
+    if (saved && ["theme-noche", "theme-plata", "theme-dia"].includes(saved)) {
+      setThemeState(saved);
+    }
     setMounted(true);
   }, []);
 
@@ -34,7 +36,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const html = document.documentElement;
-    html.classList.remove("theme-gold", "theme-blue", "theme-red");
+    html.classList.remove("theme-noche", "theme-plata", "theme-dia");
     html.classList.add(theme);
   }, [theme]);
 
