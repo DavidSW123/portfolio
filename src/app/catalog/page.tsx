@@ -4,19 +4,26 @@ import { CatalogClient } from "./catalog-client";
 interface SearchParams {
   brand?: string; fuel?: string; transmission?: string;
   minPrice?: string; maxPrice?: string; minYear?: string; maxYear?: string;
-  search?: string; page?: string;
+  search?: string; page?: string; sort?: string;
 }
 
 export default async function CatalogPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
-  const page = Math.max(1, parseInt(params.page || "1"));
+  const page  = Math.max(1, parseInt(params.page || "1"));
   const limit = 12;
-  const skip = (page - 1) * limit;
+  const skip  = (page - 1) * limit;
+
+  const sortMap: Record<string, object> = {
+    newest:    { createdAt: "desc" },
+    oldest:    { createdAt: "asc"  },
+    price_asc: { finalPrice: "asc" },
+    price_desc:{ finalPrice: "desc"},
+  };
+  const orderBy = sortMap[params.sort ?? "newest"] ?? sortMap.newest;
 
   const where: Record<string, unknown> = { isPublished: true, status: "PUBLISHED" };
-
   if (params.brand) where.brand = params.brand;
-  if (params.fuel) where.fuelType = params.fuel;
+  if (params.fuel)  where.fuelType = params.fuel;
   if (params.transmission) where.transmission = params.transmission;
   if (params.search) {
     where.OR = [
@@ -37,7 +44,14 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   }
 
   const [cars, total] = await Promise.all([
-    prisma.car.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" }, include: { photos: { take: 1 } } }),
+    prisma.car.findMany({
+      where, skip, take: limit, orderBy,
+      select: {
+        id: true, title: true, brand: true, model: true, year: true,
+        mileage: true, fuelType: true, engine: true, finalPrice: true, createdAt: true,
+        photos: { take: 1, orderBy: { order: "asc" }, select: { url: true } },
+      },
+    }),
     prisma.car.count({ where }),
   ]);
 
