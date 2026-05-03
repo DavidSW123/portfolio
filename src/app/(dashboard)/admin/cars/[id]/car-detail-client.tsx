@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { showToast } from "@/components/ui/toast";
 import { formatPrice, formatDate, STATUS_LABELS, calculateFinalPrice } from "@/lib/utils";
-import { ChevronLeft, Check, X, Eye, EyeOff, MessageSquare, Car } from "lucide-react";
+import { ChevronLeft, Check, X, Eye, EyeOff, MessageSquare, Car, Pencil } from "lucide-react";
 
 interface CarData {
   id: string;
@@ -100,7 +100,15 @@ export function AdminCarDetail({ car: initialCar }: { car: CarData }) {
           <h1 className="text-xl font-bold text-gray-900">{car.title}</h1>
           <p className="text-sm text-gray-500">Enviado por {car.submittedBy.name} · {formatDate(car.createdAt)}</p>
         </div>
-        <span className={`rounded-full px-3 py-1 text-sm font-medium ${statusInfo.color}`}>{statusInfo.label}</span>
+        <div className="flex items-center gap-3">
+          <Link href={`/admin/cars/${car.id}/edit`}>
+            <Button variant="outline" size="sm">
+              <Pencil className="h-4 w-4" />
+              Editar
+            </Button>
+          </Link>
+          <span className={`rounded-full px-3 py-1 text-sm font-medium ${statusInfo.color}`}>{statusInfo.label}</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

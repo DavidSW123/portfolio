@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest, createAuditLog } from "@/lib/auth";
 import { calculateFinalPrice } from "@/lib/utils";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 import { z } from "zod";
 
 const carSchema = z.object({
@@ -140,26 +139,25 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Handle photo uploads
-  const photoFiles = formData.getAll("photos") as File[];
+  const photoFiles = formData.getAll("photos").filter((f): f is File => f instanceof File);
   if (photoFiles.length > 0) {
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "cars", car.id);
-    await mkdir(uploadDir, { recursive: true });
+    const photoData: { carId: string; url: string; filename: string; order: number }[] = [];
 
-    const photoData = [];
     for (let i = 0; i < photoFiles.length; i++) {
       const file = photoFiles[i];
-      if (!(file instanceof File) || !file.type.startsWith("image/")) continue;
-      if (file.size > 10 * 1024 * 1024) continue; // 10MB limit
+      if (!file.type.startsWith("image/")) continue;
+      if (file.size > 10 * 1024 * 1024) continue;
 
-      const ext = file.name.split(".").pop() || "jpg";
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const filename = `${Date.now()}-${i}.${ext}`;
-      const buffer = Buffer.from(await file.arrayBuffer());
-      await writeFile(path.join(uploadDir, filename), buffer);
+      const blob = await put(`cars/${car.id}/${filename}`, file, {
+        access: "public",
+        addRandomSuffix: false,
+      });
 
       photoData.push({
         carId: car.id,
-        url: `/uploads/cars/${car.id}/${filename}`,
+        url: blob.url,
         filename,
         order: i,
       });
