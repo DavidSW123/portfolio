@@ -1,7 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest, createAuditLog } from "@/lib/auth";
-import { put } from "@vercel/blob";
+import { z } from "zod";
+
+const bodySchema = z.object({
+  photos: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        pathname: z.string().min(1),
+      }),
+    )
+    .min(1)
+    .max(20),
+});
+
+function isValidBlobUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.hostname.endsWith(".blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSessionFromRequest(req);
@@ -18,60 +39,31 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 
-  let formData: FormData;
+  let raw: unknown;
   try {
-    formData = await req.formData();
+    raw = await req.json();
   } catch {
-    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  const photoFiles = formData.getAll("photos").filter((f): f is File => f instanceof File);
-  if (photoFiles.length === 0) {
-    return NextResponse.json({ error: "No se enviaron fotos" }, { status: 400 });
+  const parsed = bodySchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    console.error("[cars/photos/POST] BLOB_READ_WRITE_TOKEN not configured");
-    return NextResponse.json(
-      { error: "El almacenamiento de fotos no está configurado en el servidor" },
-      { status: 500 },
-    );
+  for (const p of parsed.data.photos) {
+    if (!isValidBlobUrl(p.url)) {
+      return NextResponse.json({ error: "URL de foto inválida" }, { status: 400 });
+    }
   }
 
   const startOrder = car.photos.length;
-  const photoData: { carId: string; url: string; filename: string; order: number }[] = [];
-
-  try {
-    for (let i = 0; i < photoFiles.length; i++) {
-      const file = photoFiles[i];
-      if (!file.type.startsWith("image/")) continue;
-      if (file.size > 10 * 1024 * 1024) continue;
-
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const filename = `${Date.now()}-${i}.${ext}`;
-      const blob = await put(`cars/${car.id}/${filename}`, file, {
-        access: "public",
-        addRandomSuffix: false,
-      });
-
-      photoData.push({
-        carId: car.id,
-        url: blob.url,
-        filename,
-        order: startOrder + i,
-      });
-    }
-  } catch (err) {
-    console.error("[cars/photos/POST] Blob upload failed", err);
-    return NextResponse.json(
-      { error: `Error al subir a Vercel Blob: ${err instanceof Error ? err.message : "error desconocido"}` },
-      { status: 500 },
-    );
-  }
-
-  if (photoData.length === 0) {
-    return NextResponse.json({ error: "Las fotos no son válidas" }, { status: 400 });
-  }
+  const photoData = parsed.data.photos.map((p, i) => ({
+    carId: car.id,
+    url: p.url,
+    filename: p.pathname.split("/").pop() || `photo-${i}`,
+    order: startOrder + i,
+  }));
 
   await prisma.carPhoto.createMany({ data: photoData });
   await createAuditLog(session.id, "ADD_PHOTOS", "Car", car.id, `+${photoData.length} fotos`);

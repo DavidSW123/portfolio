@@ -1,13 +1,14 @@
 "use client";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { showToast } from "@/components/ui/toast";
 import { CAR_BRANDS, FUEL_TYPES, TRANSMISSIONS, calculateFinalPrice, formatPrice } from "@/lib/utils";
-import { Upload, X, ImageIcon } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 
 interface CarFormProps {
   initialData?: Partial<CarFormData>;
@@ -33,12 +34,21 @@ interface CarFormData {
   comment: string;
 }
 
+function makeUploadId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
 export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = false }: CarFormProps) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadId] = useState(makeUploadId);
   const [loading, setLoading] = useState(false);
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [progress, setProgress] = useState<Record<number, number>>({});
   const [errors, setErrors] = useState<Partial<CarFormData>>({});
 
   const [form, setForm] = useState<CarFormData>({
@@ -92,6 +102,11 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
   function removePhoto(index: number) {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
     setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+    setProgress((prev) => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -100,16 +115,49 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
 
     setLoading(true);
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      photos.forEach((f) => fd.append("photos", f));
+      const uploadedPhotos: { url: string; pathname: string }[] = [];
+      for (let i = 0; i < photos.length; i++) {
+        const file = photos[i];
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const safeName = `${Date.now()}-${i}.${ext}`;
+        const pathname = `cars/uploads/${uploadId}/${safeName}`;
+
+        const blob = await upload(pathname, file, {
+          access: "public",
+          handleUploadUrl: "/api/blob/upload",
+          clientPayload: JSON.stringify({ uploadId }),
+          onUploadProgress: ({ percentage }) => {
+            setProgress((prev) => ({ ...prev, [i]: percentage }));
+          },
+        });
+        uploadedPhotos.push({ url: blob.url, pathname: blob.pathname });
+      }
+
+      const payload: Record<string, unknown> = {
+        title: form.title,
+        brand: form.brand,
+        model: form.model,
+        year: parseInt(form.year),
+        basePrice: parseFloat(form.basePrice),
+      };
+      if (form.mileage) payload.mileage = parseInt(form.mileage);
+      if (form.color) payload.color = form.color;
+      if (form.fuelType) payload.fuelType = form.fuelType;
+      if (form.transmission) payload.transmission = form.transmission;
+      if (form.engine) payload.engine = form.engine;
+      if (form.doors) payload.doors = parseInt(form.doors);
+      if (form.description) payload.description = form.description;
+      if (isAdmin || showMarkup) payload.markup = parseFloat(form.markup);
+      if (form.comment) payload.comment = form.comment;
+      if (uploadedPhotos.length > 0) payload.photos = uploadedPhotos;
 
       const res = await fetch("/api/cars", {
         method: "POST",
-        body: fd,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const text = await res.text();
-      let data: { id?: string; error?: string; warning?: string } = {};
+      let data: { id?: string; error?: string } = {};
       try {
         data = text ? JSON.parse(text) : {};
       } catch {
@@ -117,14 +165,9 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
           `El servidor devolvió una respuesta inesperada (${res.status}): ${text.slice(0, 200) || "respuesta vacía"}`,
         );
       }
-
       if (!res.ok) throw new Error(data.error || `Error ${res.status} al crear el coche`);
 
-      if (data.warning) {
-        showToast(data.warning, "error");
-      } else {
-        showToast("Coche enviado correctamente. Pendiente de aprobación.", "success");
-      }
+      showToast("Coche enviado correctamente. Pendiente de aprobación.", "success");
       if (onSuccess) {
         onSuccess(data.id!);
       } else {
@@ -145,7 +188,6 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Basic info */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-2 border-b">Información básica</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -233,7 +275,6 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
         </div>
       </div>
 
-      {/* Description */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-2 border-b">Descripción</h3>
         <Textarea
@@ -246,7 +287,6 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
         />
       </div>
 
-      {/* Pricing */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-2 border-b">Precio</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -286,24 +326,24 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
         </div>
       </div>
 
-      {/* Photos */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-2 border-b">Fotos</h3>
         <div
           className="rounded-lg border-2 border-dashed border-gray-300 p-6 text-center hover:border-blue-400 transition-colors cursor-pointer"
-          onClick={() => fileRef.current?.click()}
+          onClick={() => !loading && fileRef.current?.click()}
           onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
+          onDrop={(e) => { e.preventDefault(); if (!loading) handleFiles(e.dataTransfer.files); }}
         >
           <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
           <p className="text-sm font-medium text-gray-600">Arrastra fotos o haz clic para subir</p>
-          <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP · Sin límite de fotos</p>
+          <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP · Hasta 25 MB por foto</p>
           <input
             ref={fileRef}
             type="file"
             accept="image/*"
             multiple
             className="hidden"
+            disabled={loading}
             onChange={(e) => handleFiles(e.target.files)}
           />
         </div>
@@ -312,13 +352,28 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
             {photoPreviews.map((src, i) => (
               <div key={i} className="relative group aspect-square">
                 <img src={src} alt="" className="h-full w-full rounded-lg object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removePhoto(i)}
-                  className="absolute top-1 right-1 rounded-full bg-red-600 p-0.5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X className="h-3 w-3" />
-                </button>
+                {loading && progress[i] !== undefined && progress[i] < 100 && (
+                  <div className="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-lg overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 transition-all"
+                      style={{ width: `${progress[i]}%` }}
+                    />
+                  </div>
+                )}
+                {loading && progress[i] === 100 && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+                    <Loader2 className="h-5 w-5 text-white animate-spin" />
+                  </div>
+                )}
+                {!loading && (
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    className="absolute top-1 right-1 rounded-full bg-red-600 p-0.5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
                 {i === 0 && (
                   <span className="absolute bottom-1 left-1 rounded-sm bg-blue-600 px-1 py-0.5 text-[10px] text-white">Principal</span>
                 )}
@@ -328,7 +383,6 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
         )}
       </div>
 
-      {/* Internal comment */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-2 border-b">Comentario</h3>
         <Textarea
@@ -341,7 +395,7 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={() => router.back()}>
+        <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
           Cancelar
         </Button>
         <Button type="submit" loading={loading}>

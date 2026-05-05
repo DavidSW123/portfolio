@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest, createAuditLog } from "@/lib/auth";
 import { calculateFinalPrice } from "@/lib/utils";
-import { put } from "@vercel/blob";
 import { z } from "zod";
+
+const photoRefSchema = z.object({
+  url: z.string().url(),
+  pathname: z.string().min(1),
+});
 
 const carSchema = z.object({
   title: z.string().min(3).max(200),
@@ -20,7 +24,17 @@ const carSchema = z.object({
   basePrice: z.coerce.number().positive(),
   markup: z.coerce.number().min(0).max(500).optional(),
   comment: z.string().max(2000).optional(),
+  photos: z.array(photoRefSchema).max(20).optional(),
 });
+
+function isValidBlobUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.hostname.endsWith(".blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromRequest(req);
@@ -81,16 +95,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 
-  let formData: FormData;
+  let raw: unknown;
   try {
-    formData = await req.formData();
+    raw = await req.json();
   } catch {
-    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
-  }
-
-  const raw: Record<string, string> = {};
-  for (const [key, value] of formData.entries()) {
-    if (typeof value === "string") raw[key] = value;
+    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
   const result = carSchema.safeParse(raw);
@@ -99,9 +108,17 @@ export async function POST(req: NextRequest) {
   }
 
   const data = result.data;
+
+  if (data.photos) {
+    for (const p of data.photos) {
+      if (!isValidBlobUrl(p.url)) {
+        return NextResponse.json({ error: "URL de foto inválida" }, { status: 400 });
+      }
+    }
+  }
+
   const markup = session.role === "ADMIN" ? (data.markup ?? 30) : 30;
   const finalPrice = calculateFinalPrice(data.basePrice, markup);
-
   const isAdmin = session.role === "ADMIN";
 
   const car = await prisma.car.create({
@@ -126,6 +143,17 @@ export async function POST(req: NextRequest) {
       submittedById: session.id,
       approvedById: isAdmin ? session.id : undefined,
       approvedAt: isAdmin ? new Date() : undefined,
+      photos: data.photos && data.photos.length > 0
+        ? {
+            createMany: {
+              data: data.photos.map((p, i) => ({
+                url: p.url,
+                filename: p.pathname.split("/").pop() || `photo-${i}`,
+                order: i,
+              })),
+            },
+          }
+        : undefined,
       comments: data.comment
         ? {
             create: {
@@ -138,55 +166,6 @@ export async function POST(req: NextRequest) {
         : undefined,
     },
   });
-
-  const photoFiles = formData.getAll("photos").filter((f): f is File => f instanceof File);
-  if (photoFiles.length > 0) {
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      console.error("[cars/POST] BLOB_READ_WRITE_TOKEN not configured");
-      return NextResponse.json(
-        { id: car.id, status: car.status, warning: "Coche creado, pero el almacenamiento de fotos no está configurado en el servidor." },
-        { status: 201 },
-      );
-    }
-
-    const photoData: { carId: string; url: string; filename: string; order: number }[] = [];
-
-    try {
-      for (let i = 0; i < photoFiles.length; i++) {
-        const file = photoFiles[i];
-        if (!file.type.startsWith("image/")) continue;
-        if (file.size > 10 * 1024 * 1024) continue;
-
-        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-        const filename = `${Date.now()}-${i}.${ext}`;
-        const blob = await put(`cars/${car.id}/${filename}`, file, {
-          access: "public",
-          addRandomSuffix: false,
-        });
-
-        photoData.push({
-          carId: car.id,
-          url: blob.url,
-          filename,
-          order: i,
-        });
-      }
-    } catch (err) {
-      console.error("[cars/POST] Blob upload failed", err);
-      return NextResponse.json(
-        {
-          id: car.id,
-          status: car.status,
-          warning: `Coche creado, pero falló la subida de fotos: ${err instanceof Error ? err.message : "error desconocido"}`,
-        },
-        { status: 201 },
-      );
-    }
-
-    if (photoData.length > 0) {
-      await prisma.carPhoto.createMany({ data: photoData });
-    }
-  }
 
   await createAuditLog(session.id, "CREATE_CAR", "Car", car.id, `Coche creado: ${car.title}`);
 
