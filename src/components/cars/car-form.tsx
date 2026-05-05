@@ -44,8 +44,11 @@ function makeUploadId(): string {
 export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = false }: CarFormProps) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const [uploadId] = useState(makeUploadId);
   const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "uploading" | "saving">("idle");
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [progress, setProgress] = useState<Record<number, number>>({});
@@ -109,15 +112,25 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
     });
   }
 
+  function cancelUpload() {
+    abortRef.current?.abort();
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
 
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
+    setPhase(photos.length > 0 ? "uploading" : "saving");
+    setProgress({});
     try {
       const uploadedPhotos: { url: string; pathname: string }[] = [];
       for (let i = 0; i < photos.length; i++) {
+        if (controller.signal.aborted) throw new Error("Subida cancelada");
         const file = photos[i];
+        setActiveIndex(i);
         const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
         const safeName = `${Date.now()}-${i}.${ext}`;
         const pathname = `cars/uploads/${uploadId}/${safeName}`;
@@ -126,12 +139,16 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
           access: "public",
           handleUploadUrl: "/api/blob/upload",
           clientPayload: JSON.stringify({ uploadId }),
+          multipart: true,
+          abortSignal: controller.signal,
           onUploadProgress: ({ percentage }) => {
             setProgress((prev) => ({ ...prev, [i]: percentage }));
           },
         });
         uploadedPhotos.push({ url: blob.url, pathname: blob.pathname });
       }
+      setActiveIndex(null);
+      setPhase("saving");
 
       const payload: Record<string, unknown> = {
         title: form.title,
@@ -178,6 +195,9 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
       showToast(err instanceof Error ? err.message : "Error desconocido", "error");
     } finally {
       setLoading(false);
+      setPhase("idle");
+      setActiveIndex(null);
+      abortRef.current = null;
     }
   }
 
@@ -328,8 +348,41 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
 
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-2 border-b">Fotos</h3>
+        {phase === "uploading" && photos.length > 0 && (
+          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-blue-900">
+                Subiendo foto {(activeIndex ?? 0) + 1} de {photos.length}
+                {progress[activeIndex ?? 0] !== undefined && ` · ${Math.round(progress[activeIndex ?? 0])}%`}
+              </p>
+              <button
+                type="button"
+                onClick={cancelUpload}
+                className="text-xs font-medium text-red-600 hover:text-red-800"
+              >
+                Cancelar
+              </button>
+            </div>
+            <div className="h-2 bg-blue-100 rounded overflow-hidden">
+              <div
+                className="h-full bg-blue-600 transition-all"
+                style={{ width: `${progress[activeIndex ?? 0] ?? 0}%` }}
+              />
+            </div>
+          </div>
+        )}
+        {phase === "saving" && (
+          <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 flex items-center gap-3">
+            <Loader2 className="h-4 w-4 text-gray-600 animate-spin" />
+            <p className="text-sm text-gray-700">Guardando coche…</p>
+          </div>
+        )}
         <div
-          className="rounded-lg border-2 border-dashed border-gray-300 p-6 text-center hover:border-blue-400 transition-colors cursor-pointer"
+          className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+            loading
+              ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+              : "border-gray-300 hover:border-blue-400 cursor-pointer"
+          }`}
           onClick={() => !loading && fileRef.current?.click()}
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => { e.preventDefault(); if (!loading) handleFiles(e.dataTransfer.files); }}
@@ -349,36 +402,41 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
         </div>
         {photoPreviews.length > 0 && (
           <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-            {photoPreviews.map((src, i) => (
-              <div key={i} className="relative group aspect-square">
-                <img src={src} alt="" className="h-full w-full rounded-lg object-cover" />
-                {loading && progress[i] !== undefined && progress[i] < 100 && (
-                  <div className="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-lg overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 transition-all"
-                      style={{ width: `${progress[i]}%` }}
-                    />
-                  </div>
-                )}
-                {loading && progress[i] === 100 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
-                    <Loader2 className="h-5 w-5 text-white animate-spin" />
-                  </div>
-                )}
-                {!loading && (
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(i)}
-                    className="absolute top-1 right-1 rounded-full bg-red-600 p-0.5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-                {i === 0 && (
-                  <span className="absolute bottom-1 left-1 rounded-sm bg-blue-600 px-1 py-0.5 text-[10px] text-white">Principal</span>
-                )}
-              </div>
-            ))}
+            {photoPreviews.map((src, i) => {
+              const pct = progress[i];
+              const isActive = activeIndex === i && phase === "uploading";
+              const isDone = pct === 100;
+              return (
+                <div key={i} className="relative group aspect-square">
+                  <img src={src} alt="" className="h-full w-full rounded-lg object-cover" />
+                  {phase === "uploading" && (isActive || isDone) && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 rounded-lg text-white">
+                      {isDone ? (
+                        <span className="text-xs font-semibold">✓</span>
+                      ) : (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin mb-1" />
+                          <span className="text-xs font-semibold">{Math.round(pct ?? 0)}%</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {!loading && (
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      className="absolute top-1 right-1 rounded-full bg-red-600 p-0.5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Quitar foto"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                  {i === 0 && (
+                    <span className="absolute bottom-1 left-1 rounded-sm bg-blue-600 px-1 py-0.5 text-[10px] text-white">Principal</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

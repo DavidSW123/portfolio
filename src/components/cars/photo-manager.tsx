@@ -21,8 +21,15 @@ export function PhotoManager({ carId, initialPhotos, canEdit }: Props) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<Record<number, number>>({});
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  function cancelUpload() {
+    abortRef.current?.abort();
+  }
 
   async function uploadFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -32,12 +39,17 @@ export function PhotoManager({ carId, initialPhotos, canEdit }: Props) {
       return;
     }
 
+    const controller = new AbortController();
+    abortRef.current = controller;
     setUploading(true);
     setProgress({});
+    setTotalCount(valid.length);
     try {
       const uploaded: { url: string; pathname: string }[] = [];
       for (let i = 0; i < valid.length; i++) {
+        if (controller.signal.aborted) throw new Error("Subida cancelada");
         const file = valid[i];
+        setActiveIndex(i);
         const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
         const safeName = `${Date.now()}-${i}.${ext}`;
         const pathname = `cars/${carId}/${safeName}`;
@@ -46,6 +58,8 @@ export function PhotoManager({ carId, initialPhotos, canEdit }: Props) {
           access: "public",
           handleUploadUrl: "/api/blob/upload",
           clientPayload: JSON.stringify({ carId }),
+          multipart: true,
+          abortSignal: controller.signal,
           onUploadProgress: ({ percentage }) => {
             setProgress((prev) => ({ ...prev, [i]: percentage }));
           },
@@ -75,6 +89,9 @@ export function PhotoManager({ carId, initialPhotos, canEdit }: Props) {
     } finally {
       setUploading(false);
       setProgress({});
+      setActiveIndex(null);
+      setTotalCount(0);
+      abortRef.current = null;
       if (fileRef.current) fileRef.current.value = "";
     }
   }
@@ -97,20 +114,39 @@ export function PhotoManager({ carId, initialPhotos, canEdit }: Props) {
     }
   }
 
-  const totalProgress = Object.keys(progress).length > 0
-    ? Math.round(
-        Object.values(progress).reduce((a, b) => a + b, 0) / Object.keys(progress).length,
-      )
-    : 0;
+  const currentPct = activeIndex !== null ? progress[activeIndex] ?? 0 : 0;
 
   return (
     <div className="space-y-4">
+      {uploading && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-blue-900">
+              Subiendo foto {(activeIndex ?? 0) + 1} de {totalCount} · {Math.round(currentPct)}%
+            </p>
+            <button
+              type="button"
+              onClick={cancelUpload}
+              className="text-xs font-medium text-red-600 hover:text-red-800"
+            >
+              Cancelar
+            </button>
+          </div>
+          <div className="h-2 bg-blue-100 rounded overflow-hidden">
+            <div
+              className="h-full bg-blue-600 transition-all"
+              style={{ width: `${currentPct}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {photos.length > 0 && (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
           {photos.map((photo, i) => (
             <div key={photo.id} className="relative group aspect-square">
               <img src={photo.url} alt="" className="h-full w-full rounded-lg object-cover" />
-              {canEdit && (
+              {canEdit && !uploading && (
                 <button
                   type="button"
                   onClick={() => deletePhoto(photo.id)}
@@ -137,8 +173,10 @@ export function PhotoManager({ carId, initialPhotos, canEdit }: Props) {
 
       {canEdit && (
         <div
-          className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors cursor-pointer ${
-            uploading ? "border-blue-400 bg-blue-50" : "border-gray-300 hover:border-blue-400"
+          className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+            uploading
+              ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+              : "border-gray-300 hover:border-blue-400 cursor-pointer"
           }`}
           onClick={() => !uploading && fileRef.current?.click()}
           onDragOver={(e) => e.preventDefault()}
@@ -147,25 +185,9 @@ export function PhotoManager({ carId, initialPhotos, canEdit }: Props) {
             if (!uploading) uploadFiles(e.dataTransfer.files);
           }}
         >
-          {uploading ? (
-            <>
-              <Loader2 className="mx-auto h-8 w-8 text-blue-500 mb-2 animate-spin" />
-              <p className="text-sm font-medium text-blue-600">
-                Subiendo fotos... {totalProgress > 0 && `${totalProgress}%`}
-              </p>
-              {totalProgress > 0 && (
-                <div className="mt-2 mx-auto max-w-xs h-1 bg-gray-200 rounded overflow-hidden">
-                  <div className="h-full bg-blue-500 transition-all" style={{ width: `${totalProgress}%` }} />
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-              <p className="text-sm font-medium text-gray-600">Arrastra fotos o haz clic para añadir</p>
-              <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP · Hasta 25 MB por foto</p>
-            </>
-          )}
+          <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+          <p className="text-sm font-medium text-gray-600">Arrastra fotos o haz clic para añadir</p>
+          <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP · Hasta 25 MB por foto</p>
           <input
             ref={fileRef}
             type="file"
