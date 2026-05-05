@@ -30,27 +30,43 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "No se enviaron fotos" }, { status: 400 });
   }
 
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error("[cars/photos/POST] BLOB_READ_WRITE_TOKEN not configured");
+    return NextResponse.json(
+      { error: "El almacenamiento de fotos no está configurado en el servidor" },
+      { status: 500 },
+    );
+  }
+
   const startOrder = car.photos.length;
   const photoData: { carId: string; url: string; filename: string; order: number }[] = [];
 
-  for (let i = 0; i < photoFiles.length; i++) {
-    const file = photoFiles[i];
-    if (!file.type.startsWith("image/")) continue;
-    if (file.size > 10 * 1024 * 1024) continue;
+  try {
+    for (let i = 0; i < photoFiles.length; i++) {
+      const file = photoFiles[i];
+      if (!file.type.startsWith("image/")) continue;
+      if (file.size > 10 * 1024 * 1024) continue;
 
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const filename = `${Date.now()}-${i}.${ext}`;
-    const blob = await put(`cars/${car.id}/${filename}`, file, {
-      access: "public",
-      addRandomSuffix: false,
-    });
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const filename = `${Date.now()}-${i}.${ext}`;
+      const blob = await put(`cars/${car.id}/${filename}`, file, {
+        access: "public",
+        addRandomSuffix: false,
+      });
 
-    photoData.push({
-      carId: car.id,
-      url: blob.url,
-      filename,
-      order: startOrder + i,
-    });
+      photoData.push({
+        carId: car.id,
+        url: blob.url,
+        filename,
+        order: startOrder + i,
+      });
+    }
+  } catch (err) {
+    console.error("[cars/photos/POST] Blob upload failed", err);
+    return NextResponse.json(
+      { error: `Error al subir a Vercel Blob: ${err instanceof Error ? err.message : "error desconocido"}` },
+      { status: 500 },
+    );
   }
 
   if (photoData.length === 0) {

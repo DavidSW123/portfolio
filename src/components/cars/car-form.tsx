@@ -108,13 +108,25 @@ export function CarForm({ initialData, onSuccess, isAdmin = false, showMarkup = 
         method: "POST",
         body: fd,
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: { id?: string; error?: string; warning?: string } = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(
+          `El servidor devolvió una respuesta inesperada (${res.status}): ${text.slice(0, 200) || "respuesta vacía"}`,
+        );
+      }
 
-      if (!res.ok) throw new Error(data.error || "Error al crear el coche");
+      if (!res.ok) throw new Error(data.error || `Error ${res.status} al crear el coche`);
 
-      showToast("Coche enviado correctamente. Pendiente de aprobación.", "success");
+      if (data.warning) {
+        showToast(data.warning, "error");
+      } else {
+        showToast("Coche enviado correctamente. Pendiente de aprobación.", "success");
+      }
       if (onSuccess) {
-        onSuccess(data.id);
+        onSuccess(data.id!);
       } else {
         router.refresh();
         router.back();

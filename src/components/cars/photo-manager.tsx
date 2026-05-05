@@ -35,9 +35,17 @@ export function PhotoManager({ carId, initialPhotos, canEdit }: Props) {
       const fd = new FormData();
       valid.forEach((f) => fd.append("photos", f));
       const res = await fetch(`/api/cars/${carId}/photos`, { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error al subir");
-      setPhotos(data.photos);
+      const text = await res.text();
+      let data: { photos?: Photo[]; error?: string } = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(
+          `El servidor devolvió una respuesta inesperada (${res.status}): ${text.slice(0, 200) || "respuesta vacía"}`,
+        );
+      }
+      if (!res.ok) throw new Error(data.error || `Error ${res.status} al subir`);
+      if (data.photos) setPhotos(data.photos);
       showToast(`${valid.length} foto(s) subida(s)`, "success");
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : "Error al subir fotos", "error");

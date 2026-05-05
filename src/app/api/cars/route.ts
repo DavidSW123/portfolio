@@ -141,26 +141,46 @@ export async function POST(req: NextRequest) {
 
   const photoFiles = formData.getAll("photos").filter((f): f is File => f instanceof File);
   if (photoFiles.length > 0) {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error("[cars/POST] BLOB_READ_WRITE_TOKEN not configured");
+      return NextResponse.json(
+        { id: car.id, status: car.status, warning: "Coche creado, pero el almacenamiento de fotos no está configurado en el servidor." },
+        { status: 201 },
+      );
+    }
+
     const photoData: { carId: string; url: string; filename: string; order: number }[] = [];
 
-    for (let i = 0; i < photoFiles.length; i++) {
-      const file = photoFiles[i];
-      if (!file.type.startsWith("image/")) continue;
-      if (file.size > 10 * 1024 * 1024) continue;
+    try {
+      for (let i = 0; i < photoFiles.length; i++) {
+        const file = photoFiles[i];
+        if (!file.type.startsWith("image/")) continue;
+        if (file.size > 10 * 1024 * 1024) continue;
 
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const filename = `${Date.now()}-${i}.${ext}`;
-      const blob = await put(`cars/${car.id}/${filename}`, file, {
-        access: "public",
-        addRandomSuffix: false,
-      });
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const filename = `${Date.now()}-${i}.${ext}`;
+        const blob = await put(`cars/${car.id}/${filename}`, file, {
+          access: "public",
+          addRandomSuffix: false,
+        });
 
-      photoData.push({
-        carId: car.id,
-        url: blob.url,
-        filename,
-        order: i,
-      });
+        photoData.push({
+          carId: car.id,
+          url: blob.url,
+          filename,
+          order: i,
+        });
+      }
+    } catch (err) {
+      console.error("[cars/POST] Blob upload failed", err);
+      return NextResponse.json(
+        {
+          id: car.id,
+          status: car.status,
+          warning: `Coche creado, pero falló la subida de fotos: ${err instanceof Error ? err.message : "error desconocido"}`,
+        },
+        { status: 201 },
+      );
     }
 
     if (photoData.length > 0) {
