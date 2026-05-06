@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getSessionFromRequest } from "@/lib/auth";
+import { getSessionFromRequest, createAuditLog } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
@@ -72,6 +72,14 @@ export async function POST(req: NextRequest) {
       car: { select: { id: true, title: true } },
     },
   });
+
+  await createAuditLog(
+    session.id,
+    "CREATE_INQUIRY",
+    "CarInquiry",
+    inquiry.id,
+    `Consulta sobre "${inquiry.car.title}"`,
+  );
 
   return NextResponse.json(inquiry, { status: 201 });
 }

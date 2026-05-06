@@ -14,10 +14,24 @@ const ACTION_LABELS: Record<string, string> = {
   APPROVE_CAR: "Coche aprobado",
   REJECT_CAR: "Coche rechazado",
   PUBLISH_CAR: "Coche publicado",
+  UNPUBLISH_CAR: "Coche despublicado",
+  PRICE_CAR: "Precio modificado",
+  ADD_PHOTOS: "Fotos añadidas",
+  DELETE_PHOTO: "Foto eliminada",
+  ADD_COMMENT: "Comentario añadido",
+  CREATE_INQUIRY: "Consulta creada",
+  UPDATE_INQUIRY: "Consulta actualizada",
   CREATE_USER: "Usuario creado",
   UPDATE_USER: "Usuario actualizado",
   DELETE_USER: "Usuario eliminado",
   CHANGE_PASSWORD: "Contraseña cambiada",
+  CREATE_API: "API creada",
+  UPDATE_API: "API actualizada",
+  DELETE_API: "API eliminada",
+  UPDATE_SITE_ASSET: "Asset del sitio actualizado",
+  DELETE_SITE_ASSET: "Asset del sitio eliminado",
+  UPDATE_SITE_TEXT: "Texto del sitio actualizado",
+  DELETE_SITE_TEXT: "Texto del sitio eliminado",
 };
 
 const ACTION_COLORS: Record<string, string> = {
@@ -30,12 +44,29 @@ const ACTION_COLORS: Record<string, string> = {
   APPROVE_CAR: "bg-green-100 text-green-700",
   REJECT_CAR: "bg-orange-100 text-orange-700",
   PUBLISH_CAR: "bg-purple-100 text-purple-700",
+  UNPUBLISH_CAR: "bg-gray-100 text-gray-700",
+  PRICE_CAR: "bg-amber-100 text-amber-800",
+  ADD_PHOTOS: "bg-blue-100 text-blue-700",
+  DELETE_PHOTO: "bg-red-100 text-red-700",
+  ADD_COMMENT: "bg-sky-100 text-sky-700",
+  CREATE_INQUIRY: "bg-emerald-100 text-emerald-700",
+  UPDATE_INQUIRY: "bg-emerald-100 text-emerald-700",
 };
+
+const ENTITY_PRESETS: { value: string; label: string }[] = [
+  { value: "Car", label: "Coches" },
+  { value: "CarPhoto", label: "Fotos de coches" },
+  { value: "CarInquiry", label: "Consultas (contabilidad)" },
+  { value: "User", label: "Usuarios" },
+  { value: "ApiConfig", label: "APIs externas" },
+  { value: "SiteAsset", label: "Diseño · multimedia" },
+  { value: "SiteText", label: "Diseño · textos" },
+];
 
 export default async function AuditPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; action?: string; userId?: string }>;
+  searchParams: Promise<{ page?: string; action?: string; userId?: string; entity?: string }>;
 }) {
   const session = await requireSession(["ADMIN", "DEVELOPER"]);
   const params = await searchParams;
@@ -46,6 +77,7 @@ export default async function AuditPage({
   const where: Record<string, unknown> = {};
   if (params.action) where.action = params.action;
   if (params.userId) where.userId = params.userId;
+  if (params.entity) where.entity = params.entity;
 
   const [logs, total, users] = await Promise.all([
     prisma.auditLog.findMany({
@@ -70,7 +102,17 @@ export default async function AuditPage({
         </div>
 
         {/* Filters */}
-        <form className="flex flex-col sm:flex-row gap-3">
+        <form className="flex flex-col sm:flex-row gap-3 flex-wrap">
+          <select
+            name="entity"
+            defaultValue={params.entity || ""}
+            className="h-10 rounded-md border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Todas las entidades</option>
+            {ENTITY_PRESETS.map((e) => (
+              <option key={e.value} value={e.value}>{e.label}</option>
+            ))}
+          </select>
           <select
             name="action"
             defaultValue={params.action || ""}
@@ -178,7 +220,7 @@ export default async function AuditPage({
             <div className="flex gap-2">
               {page > 1 && (
                 <a
-                  href={`/admin/audit?page=${page - 1}${params.action ? `&action=${params.action}` : ""}${params.userId ? `&userId=${params.userId}` : ""}`}
+                  href={`/admin/audit?page=${page - 1}${params.action ? `&action=${params.action}` : ""}${params.userId ? `&userId=${params.userId}` : ""}${params.entity ? `&entity=${params.entity}` : ""}`}
                   className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
                 >
                   Anterior
@@ -186,7 +228,7 @@ export default async function AuditPage({
               )}
               {page < totalPages && (
                 <a
-                  href={`/admin/audit?page=${page + 1}${params.action ? `&action=${params.action}` : ""}${params.userId ? `&userId=${params.userId}` : ""}`}
+                  href={`/admin/audit?page=${page + 1}${params.action ? `&action=${params.action}` : ""}${params.userId ? `&userId=${params.userId}` : ""}${params.entity ? `&entity=${params.entity}` : ""}`}
                   className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
                 >
                   Siguiente

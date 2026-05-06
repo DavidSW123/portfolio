@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getSessionFromRequest } from "@/lib/auth";
+import { getSessionFromRequest, createAuditLog } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const patchSchema = z.object({
@@ -26,6 +26,14 @@ export async function PATCH(
     where: { id },
     data: { status: parsed.data.status },
   });
+
+  await createAuditLog(
+    session.id,
+    "UPDATE_INQUIRY",
+    "CarInquiry",
+    inquiry.id,
+    `Estado: ${parsed.data.status}`,
+  );
 
   return NextResponse.json(inquiry);
 }

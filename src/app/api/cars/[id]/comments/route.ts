@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionFromRequest } from "@/lib/auth";
+import { getSessionFromRequest, createAuditLog } from "@/lib/auth";
 import { z } from "zod";
 
 const schema = z.object({
@@ -31,6 +31,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       isInternal,
     },
   });
+
+  await createAuditLog(
+    session.id,
+    "ADD_COMMENT",
+    "Car",
+    id,
+    isInternal ? "Comentario interno" : "Comentario público",
+  );
 
   return NextResponse.json(comment, { status: 201 });
 }

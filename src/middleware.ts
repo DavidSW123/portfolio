@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
   // Security headers
   const response = NextResponse.next();
   response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
   response.headers.set("X-XSS-Protection", "1; mode=block");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set(
@@ -33,7 +33,10 @@ export async function middleware(req: NextRequest) {
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
+      "media-src 'self' blob: https://*.public.blob.vercel-storage.com https://*.blob.vercel-storage.com",
       "font-src 'self'",
+      "frame-ancestors 'self'",
+      "frame-src 'self'",
       "connect-src 'self' https://*.public.blob.vercel-storage.com https://*.blob.vercel-storage.com https://vercel.com",
     ].join("; ") + ";",
   );

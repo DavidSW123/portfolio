@@ -102,12 +102,29 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     approvalData.approvedAt = new Date();
   }
 
+  const priceChanged =
+    updates.basePrice !== undefined && updates.basePrice !== car.basePrice ||
+    updates.markup !== undefined && updates.markup !== car.markup;
+
   const updated = await prisma.car.update({
     where: { id },
     data: { ...updates, finalPrice, ...approvalData },
   });
 
-  await createAuditLog(session.id, "UPDATE_CAR", "Car", id, `Estado: ${updated.status}`);
+  let action = "UPDATE_CAR";
+  let detail = `Estado: ${updated.status}`;
+  if (updates.status && updates.status !== car.status) {
+    if (updates.status === "APPROVED") action = "APPROVE_CAR";
+    else if (updates.status === "REJECTED") action = "REJECT_CAR";
+    else if (updates.status === "PUBLISHED") action = "PUBLISH_CAR";
+  } else if (updates.isPublished !== undefined && updates.isPublished !== car.isPublished) {
+    action = updates.isPublished ? "PUBLISH_CAR" : "UNPUBLISH_CAR";
+  } else if (priceChanged) {
+    action = "PRICE_CAR";
+    detail = `Precio base: ${updates.basePrice ?? car.basePrice}€, margen: ${updates.markup ?? car.markup}%, final: ${finalPrice}€`;
+  }
+
+  await createAuditLog(session.id, action, "Car", id, detail);
 
   return NextResponse.json(updated);
 }
