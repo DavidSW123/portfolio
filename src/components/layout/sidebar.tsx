@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Car, Users, Settings, LogOut, ChevronRight,
-  Package, Globe, BarChart3, FileText, Bell, Shield, Zap
+  Package, Globe, BarChart3, FileText, Bell, Shield, Zap, ExternalLink
 } from "lucide-react";
 import type { Role } from "@/types";
 
@@ -132,6 +132,30 @@ export function Sidebar({ role, userName, userEmail }: SidebarProps) {
 
       {/* Footer */}
       <div className="px-3 py-4 space-y-1" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all"
+          style={{ color: "var(--text-muted)" }}
+        >
+          <Globe className="h-4 w-4" />
+          <span className="flex-1">Ver sitio web</span>
+          <ExternalLink className="h-3 w-3 opacity-60" />
+        </a>
+        {role !== "CLIENT" && (
+          <a
+            href="/catalog"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all"
+            style={{ color: "var(--text-muted)" }}
+          >
+            <Car className="h-4 w-4" />
+            <span className="flex-1">Catálogo público</span>
+            <ExternalLink className="h-3 w-3 opacity-60" />
+          </a>
+        )}
         <Link
           href="/profile"
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all"
