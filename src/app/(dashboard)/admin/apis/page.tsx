@@ -6,6 +6,8 @@ import { Modal } from "@/components/ui/modal";
 import { showToast } from "@/components/ui/toast";
 import { formatDate } from "@/lib/utils";
 import { Globe, Plus, RefreshCw, Trash2, ToggleLeft, ToggleRight, CheckCircle, AlertCircle } from "lucide-react";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import type { Role } from "@/types";
 
 interface ApiItem {
   id: string;
@@ -36,6 +38,16 @@ export default function AdminApisPage() {
   const [fetchedData, setFetchedData] = useState<{ apiId: string; cars: FetchedCar[] } | null>(null);
   const [form, setForm] = useState({ name: "", url: "", apiKey: "", headers: "" });
   const [formLoading, setFormLoading] = useState(false);
+  const [me, setMe] = useState<{ name: string; email: string; role: Role } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.user) setMe({ name: d.user.name, email: d.user.email, role: d.user.role });
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchApis = useCallback(async () => {
     setLoading(true);
@@ -122,6 +134,7 @@ export default function AdminApisPage() {
   }
 
   return (
+    <DashboardLayout role={me?.role ?? "ADMIN"} userName={me?.name ?? ""} userEmail={me?.email ?? ""}>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -275,5 +288,6 @@ export default function AdminApisPage() {
         </div>
       </Modal>
     </div>
+    </DashboardLayout>
   );
 }

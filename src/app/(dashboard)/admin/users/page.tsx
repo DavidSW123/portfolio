@@ -7,6 +7,8 @@ import { Select } from "@/components/ui/select";
 import { showToast } from "@/components/ui/toast";
 import { formatDate, ROLE_LABELS } from "@/lib/utils";
 import { Users, Plus, Search, Pencil, Trash2, UserCheck, UserX } from "lucide-react";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import type { Role } from "@/types";
 
 interface UserItem {
   id: string;
@@ -29,6 +31,16 @@ export default function AdminUsersPage() {
   const [editUser, setEditUser] = useState<UserItem | null>(null);
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "CLIENT", phone: "" });
   const [formLoading, setFormLoading] = useState(false);
+  const [me, setMe] = useState<{ name: string; email: string; role: Role } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.user) setMe({ name: d.user.name, email: d.user.email, role: d.user.role });
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -108,6 +120,7 @@ export default function AdminUsersPage() {
   ];
 
   return (
+    <DashboardLayout role={me?.role ?? "ADMIN"} userName={me?.name ?? ""} userEmail={me?.email ?? ""}>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -259,5 +272,6 @@ export default function AdminUsersPage() {
         </Modal>
       )}
     </div>
+    </DashboardLayout>
   );
 }
