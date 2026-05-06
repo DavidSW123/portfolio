@@ -101,6 +101,7 @@ export default function AdminUsersPage() {
 
   const roleOptions = [
     { value: "ADMIN", label: "Administrador" },
+    { value: "DEVELOPER", label: "Developer" },
     { value: "PROVIDER", label: "Proveedor" },
     { value: "COLLABORATOR", label: "Colaborador" },
     { value: "CLIENT", label: "Cliente" },

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   // Only admin can add internal comments
-  const isInternal = session.role === "ADMIN" ? result.data.isInternal : false;
+  const isInternal = (session.role === "ADMIN" || session.role === "DEVELOPER") ? result.data.isInternal : false;
 
   const comment = await prisma.carComment.create({
     data: {

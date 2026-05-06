@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { CatalogClient } from "./catalog-client";
+import { loadSiteContent } from "@/lib/site-content";
 
 interface SearchParams {
   brand?: string; fuel?: string; transmission?: string;
@@ -43,7 +44,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
     if (params.maxYear) (where.year as Record<string, number>).lte = parseInt(params.maxYear);
   }
 
-  const [cars, total] = await Promise.all([
+  const [cars, total, content] = await Promise.all([
     prisma.car.findMany({
       where, skip, take: limit, orderBy,
       select: {
@@ -53,6 +54,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
       },
     }),
     prisma.car.count({ where }),
+    loadSiteContent(),
   ]);
 
   return (
@@ -62,6 +64,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
       page={page}
       totalPages={Math.ceil(total / limit)}
       params={params as Record<string, string | undefined>}
+      content={content}
     />
   );
 }

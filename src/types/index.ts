@@ -1,4 +1,4 @@
-export type Role = "ADMIN" | "PROVIDER" | "COLLABORATOR" | "CLIENT";
+export type Role = "ADMIN" | "DEVELOPER" | "PROVIDER" | "COLLABORATOR" | "CLIENT";
 export type CarStatus = "PENDING" | "APPROVED" | "REJECTED" | "PUBLISHED";
 export type CarSource = "MANUAL" | "API" | "ADMIN";
 

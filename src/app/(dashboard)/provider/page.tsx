@@ -1,4 +1,4 @@
-import { requireSession } from "@/lib/server-session";
+﻿import { requireSession } from "@/lib/server-session";
 import { prisma } from "@/lib/prisma";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Car, Clock, CheckCircle, XCircle, Plus, ArrowRight } from "lucide-react
 import { formatPrice, formatDate, STATUS_LABELS } from "@/lib/utils";
 
 export default async function ProviderDashboard() {
-  const session = await requireSession(["PROVIDER", "ADMIN"]);
+  const session = await requireSession(["PROVIDER", "ADMIN", "DEVELOPER"]);
 
   const [myCars, stats] = await Promise.all([
     prisma.car.findMany({

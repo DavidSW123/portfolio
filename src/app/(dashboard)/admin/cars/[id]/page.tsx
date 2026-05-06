@@ -6,7 +6,7 @@ import Link from "next/link";
 import { AdminCarDetail } from "./car-detail-client";
 
 export default async function AdminCarDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const session = await requireSession(["ADMIN"]);
+  const session = await requireSession(["ADMIN", "DEVELOPER"]);
   const { id } = await params;
 
   const car = await prisma.car.findUnique({
@@ -22,7 +22,7 @@ export default async function AdminCarDetailPage({ params }: { params: Promise<{
   if (!car) notFound();
 
   return (
-    <DashboardLayout role="ADMIN" userName={session.name} userEmail={session.email}>
+    <DashboardLayout role={session.role} userName={session.name} userEmail={session.email}>
       <AdminCarDetail car={car as Parameters<typeof AdminCarDetail>[0]["car"]} />
     </DashboardLayout>
   );

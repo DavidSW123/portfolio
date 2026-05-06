@@ -4,7 +4,7 @@ import { getSessionFromRequest } from "@/lib/auth";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSessionFromRequest(req);
-  if (!session || session.role !== "ADMIN") {
+  if (!session || (session.role !== "ADMIN" && session.role !== "DEVELOPER")) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 

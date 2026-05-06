@@ -1,4 +1,4 @@
-import { requireSession } from "@/lib/server-session";
+﻿import { requireSession } from "@/lib/server-session";
 import { prisma } from "@/lib/prisma";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Car, Search, MessageSquare, ArrowRight } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
 export default async function ClientDashboard() {
-  const session = await requireSession(["CLIENT", "ADMIN"]);
+  const session = await requireSession(["CLIENT", "ADMIN", "DEVELOPER"]);
 
   const [featuredCars, totalCars] = await Promise.all([
     prisma.car.findMany({

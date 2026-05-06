@@ -11,7 +11,7 @@ export default async function AdminEditCarPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await requireSession(["ADMIN"]);
+  const session = await requireSession(["ADMIN", "DEVELOPER"]);
   const { id } = await params;
 
   const car = await prisma.car.findUnique({
@@ -21,7 +21,7 @@ export default async function AdminEditCarPage({
   if (!car) notFound();
 
   return (
-    <DashboardLayout role="ADMIN" userName={session.name} userEmail={session.email}>
+    <DashboardLayout role={session.role} userName={session.name} userEmail={session.email}>
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <Link

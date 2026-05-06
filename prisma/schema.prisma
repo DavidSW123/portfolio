@@ -147,3 +147,23 @@ model AuditLog {
 
   user      User     @relation(fields: [userId], references: [id])
 }
+
+model SiteAsset {
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  type       String
+  url        String
+  pathname   String
+  updatedById String?
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
+
+model SiteText {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  value       String
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}

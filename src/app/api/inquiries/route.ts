@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * limit;
 
   const where =
-    session.role === "ADMIN"
+    (session.role === "ADMIN" || session.role === "DEVELOPER")
       ? {}
       : { client: { userId: session.id } };
 

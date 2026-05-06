@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Car, Users, Settings, LogOut, ChevronRight,
-  Package, Globe, BarChart3, FileText, Bell, Shield, Zap
+  Package, Globe, BarChart3, FileText, Bell, Shield, Zap, Palette
 } from "lucide-react";
 import type { Role } from "@/types";
 
@@ -16,6 +16,16 @@ const navItems: Record<Role, { href: string; label: string; icon: React.ElementT
     { href: "/admin/inquiries", label: "Consultas", icon: Bell },
     { href: "/admin/reports", label: "Reportes", icon: BarChart3 },
     { href: "/admin/audit", label: "Auditoría", icon: Shield },
+  ],
+  DEVELOPER: [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/cars", label: "Gestión de Coches", icon: Car },
+    { href: "/admin/users", label: "Usuarios", icon: Users },
+    { href: "/admin/apis", label: "APIs Externas", icon: Globe },
+    { href: "/admin/inquiries", label: "Consultas", icon: Bell },
+    { href: "/admin/reports", label: "Reportes", icon: BarChart3 },
+    { href: "/admin/audit", label: "Auditoría", icon: Shield },
+    { href: "/admin/design", label: "Diseño", icon: Palette },
   ],
   PROVIDER: [
     { href: "/provider", label: "Dashboard", icon: LayoutDashboard },
@@ -36,6 +46,7 @@ const navItems: Record<Role, { href: string; label: string; icon: React.ElementT
 
 const roleLabels: Record<Role, { label: string }> = {
   ADMIN: { label: "Administrador" },
+  DEVELOPER: { label: "Developer" },
   PROVIDER: { label: "Proveedor" },
   COLLABORATOR: { label: "Colaborador" },
   CLIENT: { label: "Cliente" },
@@ -150,6 +161,7 @@ export function Sidebar({ role, userName, userEmail }: SidebarProps) {
             Catálogo público
           </Link>
         )}
+        {/* DEVELOPER nav already includes "Diseño" via navItems */}
         <Link
           href="/profile"
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all"

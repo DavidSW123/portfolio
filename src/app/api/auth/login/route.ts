@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
 
   const redirectMap: Record<string, string> = {
     ADMIN: "/admin",
+    DEVELOPER: "/admin",
     PROVIDER: "/provider",
     COLLABORATOR: "/collaborator",
     CLIENT: "/client",

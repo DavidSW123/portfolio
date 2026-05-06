@@ -6,7 +6,7 @@ import { formatPrice } from "@/lib/utils";
 import { Car, Users, TrendingUp, ShoppingBag, CheckCircle, Clock, XCircle, Globe } from "lucide-react";
 
 export default async function ReportsPage() {
-  const session = await requireSession(["ADMIN"]);
+  const session = await requireSession(["ADMIN", "DEVELOPER"]);
 
   const [
     totalCars,
@@ -75,7 +75,7 @@ export default async function ReportsPage() {
   };
 
   return (
-    <DashboardLayout role="ADMIN" userName={session.name} userEmail={session.email}>
+    <DashboardLayout role={session.role} userName={session.name} userEmail={session.email}>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Informes y Estadísticas</h1>

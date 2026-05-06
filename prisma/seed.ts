@@ -20,6 +20,18 @@ async function main() {
     },
   });
 
+  const developerHash = await bcrypt.hash("Developer123!", 12);
+  await prisma.user.upsert({
+    where: { email: "developer@autoimport.pro" },
+    update: {},
+    create: {
+      email: "developer@autoimport.pro",
+      password: developerHash,
+      name: "Developer",
+      role: "DEVELOPER",
+    },
+  });
+
   const providerHash = await bcrypt.hash("Provider123!", 12);
   await prisma.user.upsert({
     where: { email: "proveedor@autoimport.pro" },

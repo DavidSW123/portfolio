@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   if (
-    session.role !== "ADMIN" &&
+    (session.role !== "ADMIN" && session.role !== "DEVELOPER") &&
     !car.isPublished &&
     car.submittedById !== session.id
   ) {
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   // Filter internal comments for non-admins
-  if (session.role !== "ADMIN") {
+  if ((session.role !== "ADMIN" && session.role !== "DEVELOPER")) {
     car.comments = car.comments.filter((c) => !c.isInternal);
   }
 
@@ -69,13 +69,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!car) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
   // Only admin or owner can edit
-  if (session.role !== "ADMIN" && car.submittedById !== session.id) {
+  if ((session.role !== "ADMIN" && session.role !== "DEVELOPER") && car.submittedById !== session.id) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 
   // Non-admins cannot change status or markup
   const body = await req.json();
-  if (session.role !== "ADMIN") {
+  if ((session.role !== "ADMIN" && session.role !== "DEVELOPER")) {
     delete body.status;
     delete body.markup;
     delete body.isPublished;
@@ -97,7 +97,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // If admin is approving
   const approvalData: Record<string, unknown> = {};
-  if (session.role === "ADMIN" && updates.status === "APPROVED") {
+  if ((session.role === "ADMIN" || session.role === "DEVELOPER") && updates.status === "APPROVED") {
     approvalData.approvedById = session.id;
     approvalData.approvedAt = new Date();
   }
@@ -115,7 +115,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSessionFromRequest(req);
   if (!session) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  if (session.role !== "ADMIN") return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  if ((session.role !== "ADMIN" && session.role !== "DEVELOPER")) return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
 
   const { id } = await params;
   await prisma.car.delete({ where: { id } });

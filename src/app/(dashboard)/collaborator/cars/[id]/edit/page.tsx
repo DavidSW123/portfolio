@@ -11,7 +11,7 @@ export default async function CollaboratorEditCarPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await requireSession(["COLLABORATOR", "ADMIN"]);
+  const session = await requireSession(["COLLABORATOR", "ADMIN", "DEVELOPER"]);
   const { id } = await params;
 
   const car = await prisma.car.findUnique({
@@ -20,7 +20,7 @@ export default async function CollaboratorEditCarPage({
   });
   if (!car) notFound();
 
-  if (session.role !== "ADMIN" && car.submittedById !== session.id) {
+  if ((session.role !== "ADMIN" && session.role !== "DEVELOPER") && car.submittedById !== session.id) {
     redirect("/unauthorized");
   }
 
@@ -38,7 +38,7 @@ export default async function CollaboratorEditCarPage({
           <h1 className="text-2xl font-bold text-gray-900">Editar Coche</h1>
           <p className="text-sm text-gray-500 mt-1">{car.title}</p>
         </div>
-        <EditCarClient car={car} isAdmin={session.role === "ADMIN"} />
+        <EditCarClient car={car} isAdmin={(session.role === "ADMIN" || session.role === "DEVELOPER")} />
       </div>
     </DashboardLayout>
   );

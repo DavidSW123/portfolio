@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
   if (!car) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
-  if (session.role !== "ADMIN" && car.submittedById !== session.id) {
+  if ((session.role !== "ADMIN" && session.role !== "DEVELOPER") && car.submittedById !== session.id) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 

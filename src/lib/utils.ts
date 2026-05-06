@@ -57,6 +57,7 @@ export const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 };
 export const ROLE_LABELS: Record<string, { label: string; color: string }> = {
   ADMIN: { label: "Administrador", color: "bg-purple-100 text-purple-800" },
+  DEVELOPER: { label: "Developer", color: "bg-fuchsia-100 text-fuchsia-800" },
   PROVIDER: { label: "Proveedor", color: "bg-blue-100 text-blue-800" },
   COLLABORATOR: { label: "Colaborador", color: "bg-green-100 text-green-800" },
   CLIENT: { label: "Cliente", color: "bg-gray-100 text-gray-800" },

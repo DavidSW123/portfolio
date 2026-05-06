@@ -37,7 +37,7 @@ export default async function AuditPage({
 }: {
   searchParams: Promise<{ page?: string; action?: string; userId?: string }>;
 }) {
-  const session = await requireSession(["ADMIN"]);
+  const session = await requireSession(["ADMIN", "DEVELOPER"]);
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page || "1"));
   const limit = 50;
@@ -62,7 +62,7 @@ export default async function AuditPage({
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <DashboardLayout role="ADMIN" userName={session.name} userEmail={session.email}>
+    <DashboardLayout role={session.role} userName={session.name} userEmail={session.email}>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Registro de Auditoría</h1>

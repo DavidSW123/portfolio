@@ -5,15 +5,31 @@ import { ToastContainer } from "@/components/ui/toast";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { LanguageProvider } from "@/components/language-provider";
+import { prisma } from "@/lib/prisma";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-sans" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-serif", style: ["normal", "italic"] });
 const oswald = Oswald({ subsets: ["latin"], variable: "--font-display", weight: ["600", "700"] });
 
-export const metadata: Metadata = {
-  title: "AutoImport Pro – Importación de Vehículos de Lujo",
-  description: "Plataforma profesional de importación y venta de vehículos de lujo. Coches premium al mejor precio.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  let faviconUrl: string | undefined;
+  let brandName = "AutoImport Pro – Importación de Vehículos de Lujo";
+  try {
+    const [favicon, name] = await Promise.all([
+      prisma.siteAsset.findUnique({ where: { slug: "site.favicon" }, select: { url: true } }),
+      prisma.siteText.findUnique({ where: { slug: "brand.name" }, select: { value: true } }),
+    ]);
+    if (favicon) faviconUrl = favicon.url;
+    if (name) brandName = `${name.value} – Importación de Vehículos de Lujo`;
+  } catch {
+    // DB unreachable — fall back to defaults
+  }
+  return {
+    title: brandName,
+    description: "Plataforma profesional de importación y venta de vehículos de lujo. Coches premium al mejor precio.",
+    icons: faviconUrl ? { icon: faviconUrl } : undefined,
+  };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

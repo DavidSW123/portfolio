@@ -12,6 +12,7 @@ interface SessionUser {
 
 const PANEL_BY_ROLE: Record<Role, string> = {
   ADMIN: "/admin",
+  DEVELOPER: "/admin",
   PROVIDER: "/provider",
   COLLABORATOR: "/collaborator",
   CLIENT: "/client",

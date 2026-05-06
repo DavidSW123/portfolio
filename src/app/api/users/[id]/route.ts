@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const updateSchema = z.object({
   name: z.string().min(2).max(100).optional(),
-  role: z.enum(["ADMIN", "PROVIDER", "COLLABORATOR", "CLIENT"]).optional(),
+  role: z.enum(["ADMIN", "DEVELOPER", "PROVIDER", "COLLABORATOR", "CLIENT"]).optional(),
   isActive: z.boolean().optional(),
   phone: z.string().optional(),
   address: z.string().optional(),
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params;
 
-  if (session.role !== "ADMIN" && session.id !== id) {
+  if ((session.role !== "ADMIN" && session.role !== "DEVELOPER") && session.id !== id) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 
@@ -50,7 +50,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { id } = await params;
 
-  const isAdmin = session.role === "ADMIN";
+  const isAdmin = (session.role === "ADMIN" || session.role === "DEVELOPER");
   const isSelf = session.id === id;
 
   if (!isAdmin && !isSelf) {
@@ -104,7 +104,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSessionFromRequest(req);
-  if (!session || session.role !== "ADMIN") {
+  if (!session || (session.role !== "ADMIN" && session.role !== "DEVELOPER")) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 

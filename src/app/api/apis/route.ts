@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest, createAuditLog } from "@/lib/auth";
 import { z } from "zod";
@@ -12,7 +12,7 @@ const schema = z.object({
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromRequest(req);
-  if (!session || session.role !== "ADMIN") {
+  if (!session || (session.role !== "ADMIN" && session.role !== "DEVELOPER")) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await getSessionFromRequest(req);
-  if (!session || session.role !== "ADMIN") {
+  if (!session || (session.role !== "ADMIN" && session.role !== "DEVELOPER")) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 

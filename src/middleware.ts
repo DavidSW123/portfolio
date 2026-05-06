@@ -7,10 +7,10 @@ const SECRET = new TextEncoder().encode(
 
 const PUBLIC_PATHS = ["/", "/login", "/register", "/api/auth"];
 const ROLE_PATHS: Record<string, string[]> = {
-  "/admin": ["ADMIN"],
-  "/provider": ["ADMIN", "PROVIDER"],
-  "/collaborator": ["ADMIN", "COLLABORATOR"],
-  "/client": ["ADMIN", "CLIENT"],
+  "/admin": ["ADMIN", "DEVELOPER"],
+  "/provider": ["ADMIN", "DEVELOPER", "PROVIDER"],
+  "/collaborator": ["ADMIN", "DEVELOPER", "COLLABORATOR"],
+  "/client": ["ADMIN", "DEVELOPER", "CLIENT"],
 };
 
 export async function middleware(req: NextRequest) {
@@ -71,12 +71,13 @@ export async function middleware(req: NextRequest) {
     }
 
     // API route protection
-    if (pathname.startsWith("/api/admin") && userRole !== "ADMIN") {
+    if (pathname.startsWith("/api/admin") && userRole !== "ADMIN" && userRole !== "DEVELOPER") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     if (
       pathname.startsWith("/api/cars/approve") &&
-      userRole !== "ADMIN"
+      userRole !== "ADMIN" &&
+      userRole !== "DEVELOPER"
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

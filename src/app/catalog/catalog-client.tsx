@@ -7,6 +7,7 @@ import { useLanguage } from "@/components/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { AuthNavLinks } from "@/components/auth-nav-links";
 import { formatPrice, CAR_BRANDS, FUEL_TYPES, TRANSMISSIONS } from "@/lib/utils";
+import type { SiteContent } from "@/lib/site-content";
 
 type CarRow = {
   id: string; title: string; brand: string; model: string; year: number;
@@ -21,6 +22,7 @@ interface Props {
   page: number;
   totalPages: number;
   params: Record<string, string | undefined>;
+  content: SiteContent;
 }
 
 function dateBadge(d: Date) {
@@ -34,10 +36,15 @@ function pageUrl(params: Record<string, string | undefined>, p: number) {
   return `/catalog?${q}`;
 }
 
-export function CatalogClient({ cars, total, page, totalPages, params }: Props) {
+export function CatalogClient({ cars, total, page, totalPages, params, content }: Props) {
   const { t, locale } = useLanguage();
   const c = t.catalog;
   const router = useRouter();
+  const txt = (slug: string, fallback: string) => content.texts[slug] ?? fallback;
+  const heroAsset = content.assets["catalog.hero"] ?? null;
+  const logo = content.assets["site.logo"] ?? null;
+  const brandName = txt("brand.name", "AutoImport Pro");
+  const brandTagline = txt("brand.tagline", "Import & Business Manager");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -92,8 +99,14 @@ export function CatalogClient({ cars, total, page, totalPages, params }: Props) 
         borderBottom: "1px solid rgba(255,255,255,0.07)",
       }}>
         <Link href="/" style={{ textDecoration: "none" }}>
-          <div style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", fontSize: "clamp(1rem,1.8vw,1.2rem)", fontWeight: 700, color: "rgba(255,255,255,0.9)" }}>AutoImport Pro</div>
-          <div style={{ fontSize: 8, letterSpacing: "0.24em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginTop: 1 }}>Import &amp; Business Manager</div>
+          {logo ? (
+            <img src={logo.url} alt={brandName} style={{ maxHeight: 40, maxWidth: 220 }} />
+          ) : (
+            <>
+              <div style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", fontSize: "clamp(1rem,1.8vw,1.2rem)", fontWeight: 700, color: "rgba(255,255,255,0.9)" }}>{brandName}</div>
+              <div style={{ fontSize: 8, letterSpacing: "0.24em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginTop: 1 }}>{brandTagline}</div>
+            </>
+          )}
         </Link>
 
         {/* Desktop nav */}
@@ -128,13 +141,26 @@ export function CatalogClient({ cars, total, page, totalPages, params }: Props) 
       {/* ── HERO BANNER ── */}
       <div style={{
         position: "relative", height: "clamp(260px,38vw,480px)",
-        background: "linear-gradient(135deg,#050505 0%,#0f0f0f 40%,#1a1a1a 100%)",
+        background: heroAsset ? "#000" : "linear-gradient(135deg,#050505 0%,#0f0f0f 40%,#1a1a1a 100%)",
         display: "flex", alignItems: "flex-end",
         overflow: "hidden",
       }}>
-        {/* Subtle car-like gradient shape */}
-        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 120% 100% at 70% 50%, rgba(40,40,40,0.8) 0%, transparent 60%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", inset: 0, opacity: 0.04, backgroundImage: "repeating-linear-gradient(0deg,#fff 0px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#fff 0px,transparent 1px,transparent 40px)", pointerEvents: "none" }} />
+        {heroAsset && (
+          <img
+            src={heroAsset.url}
+            alt=""
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        )}
+        {!heroAsset && (
+          <>
+            <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 120% 100% at 70% 50%, rgba(40,40,40,0.8) 0%, transparent 60%)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", inset: 0, opacity: 0.04, backgroundImage: "repeating-linear-gradient(0deg,#fff 0px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#fff 0px,transparent 1px,transparent 40px)", pointerEvents: "none" }} />
+          </>
+        )}
+        {heroAsset && (
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.7) 100%)", pointerEvents: "none" }} />
+        )}
 
         <div style={{ position: "relative", zIndex: 1, padding: "clamp(1.5rem,3vw,2.5rem) clamp(1.5rem,5vw,3rem)", maxWidth: 1200, width: "100%" }}>
           <h1 style={{
@@ -143,7 +169,7 @@ export function CatalogClient({ cars, total, page, totalPages, params }: Props) 
             lineHeight: 1.2, margin: 0, maxWidth: 860,
             textShadow: "0 2px 20px rgba(0,0,0,0.8)",
           }}>
-            {heroTitle}
+            {txt("catalog.hero.title", heroTitle)}
           </h1>
         </div>
       </div>

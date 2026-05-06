@@ -1,4 +1,4 @@
-import { requireSession } from "@/lib/server-session";
+﻿import { requireSession } from "@/lib/server-session";
 import { prisma } from "@/lib/prisma";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Car, Users, Clock, CheckCircle, TrendingUp, Globe, AlertCircle } from "
 import { formatPrice, formatDate, STATUS_LABELS } from "@/lib/utils";
 
 export default async function AdminDashboard() {
-  const session = await requireSession(["ADMIN"]);
+  const session = await requireSession(["ADMIN", "DEVELOPER"]);
 
   const [
     totalCars,
@@ -48,7 +48,7 @@ export default async function AdminDashboard() {
   ];
 
   return (
-    <DashboardLayout role="ADMIN" userName={session.name} userEmail={session.email}>
+    <DashboardLayout role={session.role} userName={session.name} userEmail={session.email}>
       <div className="space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Panel de Administración</h1>

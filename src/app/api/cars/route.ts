@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest, createAuditLog } from "@/lib/auth";
 import { calculateFinalPrice } from "@/lib/utils";
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
 
   const where: Record<string, unknown> = {};
 
-  if (session.role === "ADMIN") {
+  if ((session.role === "ADMIN" || session.role === "DEVELOPER")) {
     if (status) where.status = status;
   } else if (session.role === "PROVIDER" || session.role === "COLLABORATOR") {
     where.submittedById = session.id;
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
   const session = await getSessionFromRequest(req);
   if (!session) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-  if (!["ADMIN", "PROVIDER", "COLLABORATOR"].includes(session.role)) {
+  if (!["ADMIN", "DEVELOPER", "PROVIDER", "COLLABORATOR"].includes(session.role)) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 
@@ -117,9 +117,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const markup = session.role === "ADMIN" ? (data.markup ?? 30) : 30;
+  const markup = (session.role === "ADMIN" || session.role === "DEVELOPER") ? (data.markup ?? 30) : 30;
   const finalPrice = calculateFinalPrice(data.basePrice, markup);
-  const isAdmin = session.role === "ADMIN";
+  const isAdmin = (session.role === "ADMIN" || session.role === "DEVELOPER");
 
   const car = await prisma.car.create({
     data: {

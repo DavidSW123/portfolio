@@ -1,4 +1,4 @@
-import { requireSession } from "@/lib/server-session";
+﻿import { requireSession } from "@/lib/server-session";
 import { prisma } from "@/lib/prisma";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import Link from "next/link";
@@ -7,7 +7,7 @@ import { Car, Plus, Pencil } from "lucide-react";
 import { formatPrice, formatDate, STATUS_LABELS } from "@/lib/utils";
 
 export default async function CollaboratorCarsPage() {
-  const session = await requireSession(["COLLABORATOR", "ADMIN"]);
+  const session = await requireSession(["COLLABORATOR", "ADMIN", "DEVELOPER"]);
 
   const cars = await prisma.car.findMany({
     where: { submittedById: session.id },

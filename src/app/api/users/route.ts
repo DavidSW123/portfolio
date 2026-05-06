@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest, hashPassword, createAuditLog } from "@/lib/auth";
 import { z } from "zod";
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromRequest(req);
-  if (!session || session.role !== "ADMIN") {
+  if (!session || (session.role !== "ADMIN" && session.role !== "DEVELOPER")) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 
@@ -50,13 +50,13 @@ const createSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email().max(200),
   password: z.string().min(8),
-  role: z.enum(["ADMIN", "PROVIDER", "COLLABORATOR", "CLIENT"]),
+  role: z.enum(["ADMIN", "DEVELOPER", "PROVIDER", "COLLABORATOR", "CLIENT"]),
   phone: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
   const session = await getSessionFromRequest(req);
-  if (!session || session.role !== "ADMIN") {
+  if (!session || (session.role !== "ADMIN" && session.role !== "DEVELOPER")) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 

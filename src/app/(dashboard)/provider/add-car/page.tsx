@@ -1,11 +1,11 @@
-import { requireSession } from "@/lib/server-session";
+﻿import { requireSession } from "@/lib/server-session";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CarForm } from "@/components/cars/car-form";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
 export default async function ProviderAddCarPage() {
-  const session = await requireSession(["PROVIDER", "ADMIN"]);
+  const session = await requireSession(["PROVIDER", "ADMIN", "DEVELOPER"]);
 
   return (
     <DashboardLayout role="PROVIDER" userName={session.name} userEmail={session.email}>

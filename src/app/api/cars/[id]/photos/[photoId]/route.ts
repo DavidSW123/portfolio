@@ -19,7 +19,7 @@ export async function DELETE(
     return NextResponse.json({ error: "No encontrada" }, { status: 404 });
   }
 
-  if (session.role !== "ADMIN" && photo.car.submittedById !== session.id) {
+  if ((session.role !== "ADMIN" && session.role !== "DEVELOPER") && photo.car.submittedById !== session.id) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
   }
 

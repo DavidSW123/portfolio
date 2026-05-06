@@ -13,7 +13,7 @@ export async function PATCH(
 ) {
   const session = await getSessionFromRequest(req);
   if (!session) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  if (session.role !== "ADMIN") return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+  if ((session.role !== "ADMIN" && session.role !== "DEVELOPER")) return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
 
   const { id } = await params;
   const body = await req.json();

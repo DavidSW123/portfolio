@@ -49,6 +49,12 @@ export function hasPermission(userRole: string, requiredRoles: string[]): boolea
   return requiredRoles.includes(userRole);
 }
 
+export const ADMIN_ROLES = ["ADMIN", "DEVELOPER"] as const;
+
+export function isAdminRole(role: string): boolean {
+  return role === "ADMIN" || role === "DEVELOPER";
+}
+
 export const ROLE_PERMISSIONS = {
   ADMIN: ["*"],
   PROVIDER: ["cars:create", "cars:view_own", "profile:view", "profile:edit"],
