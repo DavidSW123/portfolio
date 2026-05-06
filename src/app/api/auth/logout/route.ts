@@ -1,17 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST() {
-  const response = NextResponse.redirect(
-    new URL("/login", process.env.NEXTAUTH_URL || "http://localhost:3000")
-  );
-  response.cookies.delete("auth-token");
+function buildLogoutResponse(req: NextRequest): NextResponse {
+  const loginUrl = new URL("/login", req.url);
+  const response = NextResponse.redirect(loginUrl, 303);
+  response.cookies.set("auth-token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 0,
+    path: "/",
+  });
   return response;
 }
 
-export async function GET() {
-  const response = NextResponse.redirect(
-    new URL("/login", process.env.NEXTAUTH_URL || "http://localhost:3000")
-  );
-  response.cookies.delete("auth-token");
-  return response;
+export async function POST(req: NextRequest) {
+  return buildLogoutResponse(req);
+}
+
+export async function GET(req: NextRequest) {
+  return buildLogoutResponse(req);
 }

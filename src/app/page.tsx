@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Car, Gem, CalendarCheck, ArrowRight, Menu, X, Shield, Globe } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { AuthNavLinks } from "@/components/auth-nav-links";
 
 /* ─── Particle canvas ─── */
 function ParticleCanvas() {
@@ -83,10 +84,9 @@ export default function HomePage() {
             <div style={{ fontSize: 9, fontWeight: 400, letterSpacing: "0.26em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Import &amp; Business Manager</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "clamp(1rem,2.5vw,2rem)", flexWrap: "wrap" }}>
-            {[{ href: "/catalog", label: t.nav.catalog }, { href: "/login", label: t.nav.login }].map(item => (
-              <Link key={item.href} href={item.href} style={{ fontSize: 12, letterSpacing: "0.1em", color: "rgba(255,255,255,0.6)", textDecoration: "none" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "#fff")} onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}>{item.label}</Link>
-            ))}
+            <Link href="/catalog" style={{ fontSize: 12, letterSpacing: "0.1em", color: "rgba(255,255,255,0.6)", textDecoration: "none" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#fff")} onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}>{t.nav.catalog}</Link>
+            <AuthNavLinks loginLabel={t.nav.login} registerLabel={t.nav.register} variant="dark" />
             <LanguageSwitcher />
           </div>
         </nav>
@@ -146,7 +146,6 @@ export default function HomePage() {
           {[
             { href: "/catalog", label: lbl({ es: "Escaparate Virtual", en: "Virtual Showroom", ru: "Витрина", de: "Virtuelle Ausstellung", it: "Vetrina Virtuale", fr: "Vitrine Virtuelle", zh: "虚拟展厅" }, "Catálogo") },
             { href: "#about",   label: lbl({ es: "Cómo trabajamos",   en: "How we work",     ru: "Как мы работаем", de: "So arbeiten wir", it: "Come lavoriamo", fr: "Comment nous travaillons", zh: "我们的服务" }, "Nosotros") },
-            { href: "/login",   label: t.nav.login },
           ].map(item => (
             <a key={item.href} href={item.href} style={{ fontSize: 11, fontWeight: 400, letterSpacing: "0.1em", color: "rgba(255,255,255,0.58)", textDecoration: "none", transition: "color 0.2s" }}
               onMouseEnter={e => (e.currentTarget.style.color = "#fff")} onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}>{item.label}</a>
@@ -155,9 +154,9 @@ export default function HomePage() {
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <LanguageSwitcher />
-          <Link href="/register" className="hidden sm:inline-flex" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", padding: "9px 18px", background: "var(--accent)", color: "#fff", textDecoration: "none" }}>
-            {t.nav.register}
-          </Link>
+          <div className="hidden sm:flex">
+            <AuthNavLinks loginLabel={t.nav.login} registerLabel={t.nav.register} variant="dark" />
+          </div>
           <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.7)", padding: 4 }}>
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>

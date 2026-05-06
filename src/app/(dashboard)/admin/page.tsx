@@ -146,7 +146,7 @@ export default async function AdminDashboard() {
                     ADMIN: "Admin", PROVIDER: "Proveedor", COLLABORATOR: "Colaborador", CLIENT: "Cliente",
                   };
                   return (
-                    <Link key={user.id} href={`/admin/users/${user.id}`} className="flex items-center gap-3 px-6 py-3 hover:bg-gray-50 transition-colors">
+                    <Link key={user.id} href="/admin/users" className="flex items-center gap-3 px-6 py-3 hover:bg-gray-50 transition-colors">
                       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">
                         {user.name.charAt(0).toUpperCase()}
                       </div>

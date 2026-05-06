@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Car, SlidersHorizontal, ChevronDown, X, Zap } from "lucide-react";
 import { useLanguage } from "@/components/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { AuthNavLinks } from "@/components/auth-nav-links";
 import { formatPrice, CAR_BRANDS, FUEL_TYPES, TRANSMISSIONS } from "@/lib/utils";
 
 type CarRow = {
@@ -99,8 +100,7 @@ export function CatalogClient({ cars, total, page, totalPages, params }: Props) 
         <nav style={{ display: "flex", alignItems: "center", gap: "clamp(1rem,2.5vw,2rem)" }} className="hidden md:flex">
           {[
             { href: "/catalog", label: lbl({ es: "Escaparate Virtual", en: "Virtual Showroom", ru: "Витрина", de: "Vitrine", it: "Vetrina", fr: "Vitrine", zh: "展厅" }), active: true },
-            { href: "/#about",  label: lbl({ es: "Cómo trabajamos", en: "How we work", ru: "О нас", de: "So arbeiten wir", it: "Come lavoriamo", fr: "Comment nous travaillons", zh: "关于我们" }) },
-            { href: "/login",   label: t.nav.login },
+            { href: "/#about",  label: lbl({ es: "Cómo trabajamos", en: "How we work", ru: "О нас", de: "So arbeiten wir", it: "Come lavoriamo", fr: "Comment nous travaillons", zh: "关于我们" }), active: false },
           ].map(item => (
             <a key={item.href} href={item.href} style={{
               fontSize: 11, letterSpacing: "0.1em", textDecoration: "none",
@@ -116,9 +116,9 @@ export function CatalogClient({ cars, total, page, totalPages, params }: Props) 
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <LanguageSwitcher />
-          <Link href="/register" className="hidden sm:inline-flex" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", padding: "9px 18px", background: "var(--accent)", color: "#fff", textDecoration: "none" }}>
-            {t.nav.register}
-          </Link>
+          <div className="hidden sm:flex">
+            <AuthNavLinks loginLabel={t.nav.login} registerLabel={t.nav.register} variant="dark" />
+          </div>
           <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.7)", padding: 4 }}>
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
           </button>
